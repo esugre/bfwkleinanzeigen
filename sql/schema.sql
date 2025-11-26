@@ -48,14 +48,34 @@ CREATE TABLE `ad_images` (
   `uploaded_at` datetime NOT NULL DEFAULT (CURRENT_TIMESTAMP)
 );
 
-ALTER TABLE `ads` ADD FOREIGN KEY (`owner_id`) REFERENCES `users` (`user_id`);
+-- Beziehung: Anzeige gehört einem User
+ALTER TABLE `ads`
+  ADD FOREIGN KEY (`owner_id`)
+  REFERENCES `users` (`user_id`);
 
-ALTER TABLE `ads_categories` ADD FOREIGN KEY (`ad_id`) REFERENCES `ads` (`ad_id`);
+-- Beziehung: Zuordnung Anzeige ↔ Kategorie
+-- Wenn eine Anzeige gelöscht wird, sollen auch ihre Kategoriezurodnungen verschwinden.
+ALTER TABLE `ads_categories`
+  ADD FOREIGN KEY (`ad_id`)
+  REFERENCES `ads` (`ad_id`)
+  ON DELETE CASCADE;
 
-ALTER TABLE `ads_categories` ADD FOREIGN KEY (`category_id`) REFERENCES `categories` (`category_id`);
+ALTER TABLE `ads_categories`
+  ADD FOREIGN KEY (`category_id`)
+  REFERENCES `categories` (`category_id`);
 
-ALTER TABLE `messages` ADD FOREIGN KEY (`from_user_id`) REFERENCES `users` (`user_id`);
+-- Beziehung: Nachrichten zwischen Usern
+ALTER TABLE `messages`
+  ADD FOREIGN KEY (`from_user_id`)
+  REFERENCES `users` (`user_id`);
 
-ALTER TABLE `messages` ADD FOREIGN KEY (`to_user_id`) REFERENCES `users` (`user_id`);
+ALTER TABLE `messages`
+  ADD FOREIGN KEY (`to_user_id`)
+  REFERENCES `users` (`user_id`);
 
-ALTER TABLE `ad_images` ADD FOREIGN KEY (`ad_id`) REFERENCES `ads` (`ad_id`);
+-- Beziehung: Bilder zu Anzeigen
+-- Wenn eine Anzeige gelöscht wird, sollen auch alle Bilddatensätze verschwinden.
+ALTER TABLE `ad_images`
+  ADD FOREIGN KEY (`ad_id`)
+  REFERENCES `ads` (`ad_id`)
+  ON DELETE CASCADE;
