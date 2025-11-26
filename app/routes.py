@@ -53,7 +53,35 @@ def login_required(f):
 # ---------------------------
 @app.route('/')
 def index():
-    return render_template('index.html')  # Platzhalter, später Liste der Anzeigen
+    """
+    Startseite mit allen Anzeigen. Romi rendert dann daraus das Listing der Anzeigen."""
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute(
+        """
+        select 
+            ads.ad_id,
+            ads.titel,
+            ads.text,
+            ads.preis,
+            ads.datum,
+            ads.status,
+            ads.bilder_path,
+            users.vorname,
+            users.nachname
+        from ads
+        join users on ads_owner_id = users.user_id
+        order by ads.datum desc
+        """
+    )
+
+    ads = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    return render_template('index.html', ads=ads)  # Übergabe an die Front, do whatever you want wif it! ;)
 
 
 # ---------------------------
@@ -123,6 +151,7 @@ def login():
         session['email'] = user['email']
         session['vorname'] = user['vorname']
         session['nachname'] = user['nachname']
+        flash("Erfolgreich eingeloggt.")
         return redirect(url_for('index'))
     else:
         flash("Ungültige E-Mail oder Passwort.")
@@ -277,6 +306,3 @@ def secret():
     return "Nur für Eingeloggte"
 
 
-# ---------------------------
-#   Session-Testseite
-# ---------------------------
