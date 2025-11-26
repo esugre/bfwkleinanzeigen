@@ -1,26 +1,17 @@
-import os
-import mysql.connector
+from flask import (
+    render_template, request, redirect, url_for,
+    flash, session
+)
+from werkzeug.security import generate_password_hash, check_password_hash
+from functools import wraps
 from app import app
-from flask import Flask, render_template, abort, url_for, request, redirect
-from markupsafe import escape, Markup
-from werkzeug.utils import secure_filename
-
-# Angabe des Upload-Folders für die Profilbilder der Tiere
-app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'app','static', 'bilder')
-# Größenlimit für die Bilder - 8MB
-app.config['MAX_CONTENT_LENGTH'] = 8 * 1024 * 1024 
-# Erlaubte Dateien für den Upload
-allowed_extensions = {'png', 'jpg', 'jpeg', 'webp', 'gif'}
+import mysql.connector
 
 
-#Überprüfungsfunktion ob das hochgeladene File eine zulässige Datei ist, nötig für den Bildupload in pet_new()
-def allowed_file(filename):
-    return '.' in filename and \
-        filename.rsplit('.', 1)[1].lower() in allowed_extensions
-
-
-#Funktion die eine Verbindung zur Datenbank aufbaut und per Return zur Verfügung stellt. 
-def get_db_connection():            
+# ---------------------------
+#   Datenbankverbindung
+# ---------------------------
+def get_db_connection():
     connection = mysql.connector.connect(
         host=app.config['DB_HOST'],
         user=app.config['DB_USER'],
@@ -30,287 +21,109 @@ def get_db_connection():
     return connection
 
 
-#Index-Seite - Verschlankt - Alle benötigten Infos in einem Abruf, ohne nachträgliches Filtern mittels Python/Jinja
+# ---------------------------
+#   Login Required Decorator
+# ---------------------------
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            flash("Bitte erst einloggen.")
+            return redirect(url_for('login_get'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+# ---------------------------
+#   Startseite
+# ---------------------------
 @app.route('/')
 def index():
-    connection = get_db_connection()
-    cursor = connection.cursor(dictionary=True)
-
-    cursor.execute('''
-                    select
-                   p.pet_id,
-                   p.name,
-                   p.description,
-                   p.animal_type,
-                   p.owner_id,
-                   p.image,
-                   exists (
-                   select 1
-                   from borrowings b
-                   where b.pet_id = p.pet_id
-                   ) as is_borrowed
-                   from pets p
-                   order by p.pet_id
-                   ''')
-    
-    pets = cursor.fetchall()
-    connection.close()
-
-    return render_template('index.html', pets=pets)
+    return render_template('index.html')  # Platzhalter, später Liste der Anzeigen
 
 
-#Login-Seite
-@app.route('/login')        
-def login():
-    
-    obrigkeit = '''
-    <!doctype html>
-    <html lang="de">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Login</title>
-    </head>
-    <body>
-        <h1>Hier findet sich - irgendwann in Zukunft - die Login-Seite</h1> 
-    '''
-
-    fußvolk = '''
-    <h2>Vielleicht findet sich hier aber auch das Elixir zur Nasenhaarentfernung UND Nasenhaarhinzuführung!!!</h2>
-    '''
-    userinput1 = "<script>alert('Kaufen Sie heute Ihr exklusives Starterpaket Nasenhaartonikum!!! Buy 1 Pay 2!!!');</script>" #not escaped Userinput
-    userinput2 = "Ich bin die traurige escaped Message: <script>alert('Kaufen Sie heute Ihr exklusives Starterpaket Nasenhaartonikum!!! Buy 1 Pay 2!!!');</script>" #escaped Userinput
-
-    output = Markup(obrigkeit) + Markup(userinput1) + escape(userinput2) + Markup(fußvolk)
-    return output
+# ---------------------------
+#   Registrierung
+# ---------------------------
+@app.get('/register')
+def register_get():
+    return render_template('register.html')
 
 
-#Seite zur Account-Erstellung
-@app.route('/register')     
-def register():
-    return "Hier können Sie sich registrieren."
+@app.post('/register')
+def register_post():
+    username = request.form.get('username')
+    password = request.form.get('password')
+
+    if not username or not password:
+        flash("Bitte alle Felder ausfüllen.")
+        return redirect(url_for('register_get'))
+
+    hashed_pw = generate_password_hash(password)
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "INSERT INTO users (username, password_hash) VALUES (%s, %s)",
+        (username, hashed_pw)
+    )
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    flash("Konto erfolgreich erstellt! Bitte einloggen.")
+    return redirect(url_for('login_get'))
 
 
-#Null, aber braucht man für den Logout
-@app.route('/logout')       
-def logout():
-    return "Hier werden Sie abgemeldet."
+# ---------------------------
+#   Login
+# ---------------------------
+@app.get('/login')
+def login_get():
+    return render_template('login.html')
 
 
-#User Management Dashboard
-@app.route('/admin')
-def admin():
-    connection = get_db_connection()
-    cursor = connection.cursor(dictionary=True)
-    cursor.execute('''select
-                   user_id, name, role
-                   from users''')
-    users = cursor.fetchall()
-    connection.close()
+@app.post('/login')
+def login_post():
+    username = request.form.get('username')
+    password = request.form.get('password')
 
-    return render_template('admin.html', user=users)
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
 
+    cursor.execute(
+        "SELECT * FROM users WHERE username = %s",
+        (username,)
+    )
+    user = cursor.fetchone()
 
-#Bearbeiten eines Benutzers
-@app.route('/edit_user/<int:user_id>')    
-def edit_user(user_id):
-    return "Hier findet sich die Nutzerbearbeitung."
+    cursor.close()
+    conn.close()
 
-
-#Null, braucht man fürs Löschen eines Nutzers
-@app.route('/delete_user/<int:user_id>')    
-def delete_user(user_id):
-    return "Falls man mal einen Nutzer löschen muss."
-
-
-# Pet-Details - Verschlankt - Nur noch ein Datensatz der aus der DB abgerufen wird.  
-@app.route('/pet/<int:pet_id>')
-def pet(pet_id):
-    connection = get_db_connection()
-    cursor = connection.cursor(dictionary=True)
-    cursor.execute('''
-                    select
-                   p.pet_id,
-                   p.name,
-                   p.description,
-                   p.animal_type,
-                   p.owner_id,
-                   p.image,
-                   exists (
-                   select 1
-                   from borrowings b
-                   where b.pet_id = p.pet_id
-                   ) as is_borrowed
-                   from pets p
-                   where p.pet_id = %s''',
-                   (pet_id,) # execute möchte ein Tupel speisen, also vergesse er nicht ein Komma hinter der Variable, sonst rastet Python aus
-                   )
-    pet_details = cursor.fetchone()
-    connection.close()
-
-    return render_template('pet_details.html', pet=pet_details)
-    
-
-# Tier Bearbeiten - Verschlankt - Daten mittels SQL vorsortiert
-@app.route('/pet/<int:pet_id>/edit', methods=['GET', 'POST'])
-def pet_edit(pet_id):
-    connection = get_db_connection()
-    cursor = connection.cursor(dictionary=True)
-    cursor.execute('''
-                    select
-                   name,
-                   description,
-                   animal_type,
-                   owner_id
-                   from pets
-                   where pet_id = %s''',
-                   (pet_id,)
-                   )
-    
-    pet = cursor.fetchone() #V1
-    connection.close()
-
-    if request.method == 'POST':
-        name = request.form['name']
-        animal_type = request.form['animal_type']
-        description = request.form['description']
-
-        connection = get_db_connection()
-        cursor = connection.cursor()
-
-        cursor.execute('''
-                        update pets
-                       set name = %s,
-                       animal_type = %s,
-                       description = %s
-                       where pet_id = %s''',
-                       (name, animal_type, description, pet_id)
-                       )
-        connection.commit()
-        connection.close()
-
-        #Weiterleitung / Zurück zur Tier-Verwaltung
-        return redirect(url_for('pet_management', user_id=pet['owner_id']))
-    
-    return render_template('pet_edit.html', pet=pet)
-
-
-#Null, zum Löschen eines Tiers
-@app.route('/pet/<int:pet_id>/delete')      
-def delete_pet(pet_id):
-    return "Falls man mal ein Tier löschen muss."
-
-
-#Null, zum Ausleihen
-@app.route('/pet/<int:pet_id>/borrow')      
-def borrow_pet(pet_id):
-    return "Wird benötigt wenn man ein Tier ausleihen möchte."
-
-
-#Null, für die Rückgabe
-@app.route('/pet/<int:pet_id>/return')      
-def return_pet(pet_id):
-    return "Wird für die Rückgabe benötigt."
-
-
-# Tierverwaltung - Verschlankt - Information direkt per SQL wie benötigt, statt mittels Python Loops after Loops...
-@app.route('/pet-management/<int:user_id>')
-def pet_management(user_id):
-    connection = get_db_connection()
-    cursor = connection.cursor(dictionary=True)
-    cursor.execute('''
-                    select
-                        p.pet_id,
-                        p.name,
-                        p.animal_type,
-                        case
-                            when exists (
-                                select 1
-                                from borrowings b
-                                where b.pet_id = p.pet_id
-                                ) 
-                                then 'verliehen'
-                                else 'verfügbar'
-                            end as status
-                   from pets p
-                   where p.owner_id = %s''',
-                   (user_id,)
-                   )
-    
-    own_pets = cursor.fetchall() #V1 für Übersicht meiner Tiere und nur diese o_^
-    
-    cursor.execute('''
-                    select
-                        p.pet_id,
-                        p.name,
-                        p.animal_type,
-                        p.owner_id
-                    from pets p
-                    where pet_id in (
-                    select pet_id
-                    from borrowings
-                    where borrower_id = %s)''',
-                    (user_id,)
-                    )
-
-    borrowed_pets = cursor.fetchall() #V2 für Übersicht meiner ausgeliehenen Tiere
-    connection.close()
-
-    return render_template('pet-management.html', own_pets=own_pets, borrowed_pets=borrowed_pets)
-
-
-#Seite zum Anlegen neuer Tiere
-@app.route('/pet/new/<int:user_id>', methods=['GET', 'POST']) #Brauche hier eig. gar keine Get-Method     
-def pet_new(user_id):
-
-    if request.method == 'POST':
-
-        name = request.form['name']
-        animal_type = request.form['animal_type']
-        description = request.form['description']
-
-        #Standardmäßig kein Bild
-        image = None
-
-        #Bildupload - die Verwirrung ist groß
-        file = request.files['image']
-        if file and file.filename:
-            if allowed_file(file.filename):
-                filename = secure_filename(file.filename)
-
-                #Ok, nochmal gucken ob der Ordner überhaupt existiert
-                upload_folder = app.config['UPLOAD_FOLDER']
-                os.makedirs(upload_folder, exist_ok=True)
-
-                filepath = os.path.join(upload_folder, filename)
-                file.save(filepath)
-
-                #Als String abspeichern
-                image = f"bilder/{filename}"
-            
-        #Speichern in der Datenbank
-        connection = get_db_connection()
-        cursor = connection.cursor()
-
-        cursor.execute('''
-                        insert into pets (
-                            name, animal_type, description, owner_id, image)
-                            Values (%s, %s, %s, %s, %s)
-                        ''', (name, animal_type, description, user_id, image)
-                        )
-        
-        connection.commit()
-        connection.close()
-
-
-        #Weiterleitung / Zurück zur Tier-Verwaltung
-        return redirect(url_for('pet_management', user_id=user_id))
-
+    if user and check_password_hash(user['password_hash'], password):
+        session['user_id'] = user['id']
+        session['username'] = user['username']
+        return redirect(url_for('index'))
     else:
-        return render_template('pet_new.html')
+        flash("Ungültige Login-Daten.")
+        return redirect(url_for('login_get'))
 
-#Fallback auf die angelegte Fehlerseite
+
+# ---------------------------
+#   Logout
+# ---------------------------
+@app.route('/logout')
+def logout():
+    session.clear()
+    flash("Erfolgreich ausgeloggt.")
+    return redirect(url_for('index'))
+
+
+# ---------------------------
+#   404 Fehlerseite
+# ---------------------------
 @app.errorhandler(404)
-def page_not_found(error):
+def page_not_found(e):
     return render_template('404.html'), 404
-
