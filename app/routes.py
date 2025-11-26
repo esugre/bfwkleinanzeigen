@@ -29,7 +29,7 @@ def login_required(f):
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
             flash("Bitte erst einloggen.")
-            return redirect(url_for('login_get'))
+            return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated_function
 
@@ -45,20 +45,19 @@ def index():
 # ---------------------------
 #   Registrierung
 # ---------------------------
-@app.get('/register')
-def register_get():
-    return render_template('register.html')
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'GET':
+        return render_template('register.html')
 
-
-@app.post('/register')
-def register_post():
+    # Post-PArt
     username = request.form.get('username')
     password = request.form.get('password')
 
     if not username or not password:
         flash("Bitte alle Felder ausfüllen.")
-        return redirect(url_for('register_get'))
-
+        return redirect(url_for('register'))
+    
     hashed_pw = generate_password_hash(password)
 
     conn = get_db_connection()
@@ -69,24 +68,23 @@ def register_post():
         (username, hashed_pw)
     )
     conn.commit()
-
     cursor.close()
     conn.close()
 
     flash("Konto erfolgreich erstellt! Bitte einloggen.")
-    return redirect(url_for('login_get'))
+    return redirect(url_for('login'))
+
 
 
 # ---------------------------
 #   Login
 # ---------------------------
-@app.get('/login')
-def login_get():
-    return render_template('login.html')
-
-
-@app.post('/login')
-def login_post():
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'GET':
+        return render_template('login.html')
+    
+    #Post-Part
     username = request.form.get('username')
     password = request.form.get('password')
 
@@ -108,7 +106,8 @@ def login_post():
         return redirect(url_for('index'))
     else:
         flash("Ungültige Login-Daten.")
-        return redirect(url_for('login_get'))
+        return redirect(url_for('login'))
+
 
 
 # ---------------------------
