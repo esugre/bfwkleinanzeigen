@@ -135,3 +135,13 @@ def logout():
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('404.html'), 404
+
+
+
+# ---------------------------
+#   Session-Testseite
+# ---------------------------
+@app.route('/secret')
+@login_required
+def secret():
+    return "Nur für Eingeloggte"
