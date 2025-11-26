@@ -50,29 +50,36 @@ def register():
     if request.method == 'GET':
         return render_template('register.html')
 
-    # Post-PArt
-    username = request.form.get('username')
+    # POST-Teil
+    vorname = request.form.get('vorname')
+    nachname = request.form.get('nachname')
+    email = request.form.get('email')
     password = request.form.get('password')
 
-    if not username or not password:
+    if not vorname or not nachname or not email or not password:
         flash("Bitte alle Felder ausfüllen.")
         return redirect(url_for('register'))
-    
+
     hashed_pw = generate_password_hash(password)
 
     conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute(
-        "INSERT INTO users (username, password_hash) VALUES (%s, %s)",
-        (username, hashed_pw)
+        """
+        INSERT INTO users (vorname, nachname, email, passwort_hash, rolle)
+        VALUES (%s, %s, %s, %s, %s)
+        """,
+        (vorname, nachname, email, hashed_pw, "user")
     )
+
     conn.commit()
     cursor.close()
     conn.close()
 
     flash("Konto erfolgreich erstellt! Bitte einloggen.")
     return redirect(url_for('login'))
+
 
 
 
@@ -83,30 +90,32 @@ def register():
 def login():
     if request.method == 'GET':
         return render_template('login.html')
-    
-    #Post-Part
-    username = request.form.get('username')
+
+    email = request.form.get('email')
     password = request.form.get('password')
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
     cursor.execute(
-        "SELECT * FROM users WHERE username = %s",
-        (username,)
+        "SELECT * FROM users WHERE email = %s",
+        (email,)
     )
     user = cursor.fetchone()
 
     cursor.close()
     conn.close()
 
-    if user and check_password_hash(user['password_hash'], password):
-        session['user_id'] = user['id']
-        session['username'] = user['username']
+    if user and check_password_hash(user['passwort_hash'], password):
+        session['user_id'] = user['user_id']         # Spalte heißt user_id
+        session['email'] = user['email']
+        session['vorname'] = user['vorname']
+        session['nachname'] = user['nachname']
         return redirect(url_for('index'))
     else:
-        flash("Ungültige Login-Daten.")
+        flash("Ungültige E-Mail oder Passwort.")
         return redirect(url_for('login'))
+
 
 
 
