@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}Adoptify - Startseite{% endblock %}
+
+{% block content %}
+
+    <div class="index-head">
+    <h1>Willkommen bei Adoptify Pet-Sharing</h1>
+    <p>Hier findest du unsere aktuellen "Mietbewohner" auf Zeit:</p>
+    </div>
+        
+    <div class="pet-list">
+        {% for pet in pets %}
+            <div class="pet-card">
+
+                <div class="image-wrapper">
+                    <img src="{{ url_for('static', filename=pet['image']) }}">
+                </div>
+
+                <h2>{{ pet.name }} ({{ pet.animal_type }})</h2>
+
+                <p>{{ pet.description }}</p>
+                
+                {% if pet.is_borrowed %}
+                    <p class="available-or-not"><b>💔 {{ pet.name }} ist verliehen.</b></p>
+                {% else %}
+                    <p class="available-or-not"><b>💚 {{ pet.name }} ist verfügbar.</b></p>
+                {% endif %}
+
+                <p></p>
+                <a href="/pet/{{ pet.pet_id }}" class="card-link">Details</a>
+            </div>
+        {% endfor %}
+    </div>
+
+{% endblock %}

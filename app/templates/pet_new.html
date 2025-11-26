@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Adoptify - Tier anlegen{% endblock %}
+{% block content %}
+
+    <div class="newpet-form">
+        
+        <h1>Neues Haustier anlegen</h1>
+
+        <form method="POST" enctype="multipart/form-data"> <!-- type attribute set to file -->
+
+            <label for="name">Name:</label><br>
+            <input type="text" id="name" name="name"><br><br>
+
+            <label for="animal_type">Tierart:</label><br>
+            <input type="text" id="animal_type" name="animal_type"><br><br>
+        
+            <label for="description">Tierart:</label><br>
+            <textarea id="description" name="description" maxlength="200" rows="5" cols="40"></textarea><br><br>
+
+            <label for="image">Profilbild</label><br>
+            <input type="file" id="image" name="image" accept="image/*"><br>
+
+            <button type="submit">Speichern & Zurück</button>
+
+        </form>
+
+    </div>
+
+
+{% endblock %}

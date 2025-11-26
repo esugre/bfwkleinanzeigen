@@ -1,0 +1,47 @@
+<!doctype html>
+  <html lang="de">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+        <link rel="icon" href="{{ url_for('static', filename='icons/favicon.ico') }}">
+        <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='icons/favicon-32x32.png') }}">
+        <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='icons/favicon-16x16.png') }}">
+
+      <title>{% block title %}Adoptify{% endblock %}</title>
+    </head>
+
+      <body>
+
+      <header class="site-header">
+        <nav class="nav">
+          <div class="brand">
+            <a href="{{ url_for('index') }}" class="brand-link">
+             <img src="{{ url_for('static', filename='icons/favicon-32x32.png') }}" alt="Adoptify Logo" class="brand-logo">
+             <span class="brand-name">Adoptify</span>
+            </a>
+
+            {% if session['user'] %}
+             <span class="slogan">Willkommen zurück, {{ session['user'] }}!</span>
+            {% else %}
+             <span class="slogan">Love is great when you find someone to give it to</span>
+            {% endif %}
+          </div>
+
+          <ul class="nav-links">
+            {% if session['user'] %}
+            <li><a href="{{ url_for('logout') }}">Abmelden</a></li>
+            <li><a href="{{ url_for('pet_management', user_id=session['user_id']) }}">Meine Haustiere</a></li>
+            {% else %}
+            <li><a href="{{ url_for('login') }}">Login</a></li>
+            <li><a href="{{ url_for('register') }}">Registrieren</a></li>
+            {% endif %}
+          </ul>
+        </nav>
+      </header>
+
+        {% block content %}
+        {% endblock %}
+
+    </body>
+  </html>
