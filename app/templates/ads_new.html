@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Neue Anzeige{% endblock %}
+
+{% block content %}
+<h1>Neue Anzeige erstellen</h1>
+
+{# 
+  enctype="multipart/form-data" ist wichtig,
+  damit Dateien (Bilder) im Request überhaupt ankommen.
+#}
+<form action="{{ url_for('ad_new') }}" method="post" enctype="multipart/form-data">
+    <div>
+        <label for="titel">Titel</label>
+        <input type="text" id="titel" name="titel" required>
+    </div>
+
+    <div>
+        <label for="text">Beschreibung</label><br>
+        <textarea id="text" name="text" rows="5" required></textarea>
+    </div>
+
+    <div>
+        <label for="preis">Preis (optional)</label>
+        <input type="number" step="0.01" id="preis" name="preis">
+    </div>
+
+    <div>
+        <label for="images">Bilder (optional)</label>
+        {# multiple erlaubt mehrere Dateien auf einmal #}
+        <input type="file" id="images" name="images" accept="image/*" multiple>
+        <p><small>Du kannst mehrere Bilder auswählen (png, jpg, jpeg, gif).</small></p>
+    </div>
+
+    <button type="submit">Anzeige veröffentlichen</button>
+</form>
+
+{% endblock %}
