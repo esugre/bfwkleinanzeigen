@@ -51,7 +51,7 @@ def login_required(f):
 # ---------------------------
 #   Startseite
 # ---------------------------
-@app.route('/')
+@app.route('/') # Alle Anzeigen auf der Startseite
 def index():
     """
     Startseite mit allen Anzeigen. Romi rendert dann daraus das Listing der Anzeigen."""
@@ -83,6 +83,48 @@ def index():
 
     return render_template('index.html', ads=ads)  # Übergabe an die Front, do whatever you want wif it! ;)
 
+
+# ---------------------------
+#   Nutzer - Listings
+# ---------------------------
+@app.route('/my-ads')   # Anzeigen des eingeloggten Nutzers
+@login_required
+def my_ads():
+    """
+    Zeigt alle Anzeigen des aktuell eingloggten Nuters an.
+    - Filter über owner_id = session['user_id']
+    - Daten gehen an das Template my_ads.html als Variable 'ads'
+    """
+
+    owner_id = session.get('user_id')
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Hier nuckeln wir nur die Anzeigen des eingeloggten Nutzers
+    # Join mit users brauchen wir hier nicht, wir wissen ja wer wir sind, hoff ich ;)
+    cursor.execute(
+        """
+        select
+            ads.ad_id,
+            ads.owner_id,
+            ads.titel,
+            ads.text,
+            ads.preis,
+            ads.datum,
+            ads.status,
+            ads.bilder_path
+        from ads
+        whereads.owner_id = %s
+        order by ads.datum desc
+        """,
+        (owner_id,)
+    )
+    ads = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    
+    # Feierliche Übergabe an Romis Template
+    return render_template('my_ads.html', ads=ads)
 
 # ---------------------------
 #   Registrierung
