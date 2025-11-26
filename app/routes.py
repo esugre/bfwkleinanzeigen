@@ -6,6 +6,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from app import app
 import mysql.connector
+import os
+from werkzeug.utils import secure_filename
 
 
 # ---------------------------
@@ -19,6 +21,18 @@ def get_db_connection():
         database=app.config['DB_NAME']
     )
     return connection
+
+
+# ---------------------------
+#   Datei-Upload Hilfsfunktion
+# ---------------------------
+# Die erlaubten Dateien aus der Config holen
+ALLOWED_EXTENSIONS = app.config.get('ALLOWED_EXTENSIONS')
+
+def allowed_file(filename: str):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+    """Prüft, ob die hochgeladene Datei erlaubt ist und nutzen secure_filename um sicherzustellen,
+    dass der Dateiname nicht irgendeinen Murks/Sonderzeichen enthält."""
 
 
 # ---------------------------
@@ -81,8 +95,6 @@ def register():
     return redirect(url_for('login'))
 
 
-
-
 # ---------------------------
 #   Login
 # ---------------------------
@@ -117,8 +129,6 @@ def login():
         return redirect(url_for('login'))
 
 
-
-
 # ---------------------------
 #   Logout
 # ---------------------------
@@ -137,7 +147,6 @@ def page_not_found(e):
     return render_template('404.html'), 404
 
 
-
 # ---------------------------
 #   Session-Testseite
 # ---------------------------
@@ -145,3 +154,8 @@ def page_not_found(e):
 @login_required
 def secret():
     return "Nur für Eingeloggte"
+
+
+# ---------------------------
+#   Session-Testseite
+# ---------------------------
