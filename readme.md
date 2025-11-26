@@ -81,6 +81,7 @@ Im Repo gibt es eine config.example.py, in der deine Datenbankverbindungsdaten h
 Diese kopieren und in config.py umbenennen sowie deine Daten anpassen. 
 Diese mittels .gitignore nicht pushen. 
 ```python
+SECRET_KEY = "CHANGE_ME" # Nicht vergessen das wir denselben nutzen!
 DB_HOST = "localhost"
 DB_NAME = "bfwkleinanzeigen"
 DB_USER = "username"
