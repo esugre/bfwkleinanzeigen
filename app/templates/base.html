@@ -34,9 +34,7 @@
           {% if 'user_id' in session %}
             <li><a href="{{ url_for('index') }}">Startseite</a></li>
             <li><a href="{{ url_for('ad_new') }}">Neue Anzeige</a></li>
-            {# Platzhalter für später:
             <li><a href="{{ url_for('my_ads') }}">Meine Anzeigen</a></li>
-            #}
             <li><a href="{{ url_for('logout') }}">Abmelden</a></li>
           {% else %}
             <li><a href="{{ url_for('login') }}">Login</a></li>
