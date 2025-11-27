@@ -482,7 +482,7 @@ def ad_edit(ad_id):
     preis = None
     if preis_raw:
         try:
-            preis = float(preis.raw.replace(',', '.'))
+            preis = float(preis_raw.replace(',', '.'))
         except ValueError:
             cursor.close()
             conn.close()
@@ -635,7 +635,7 @@ def ad_edit(ad_id):
     conn.close()
 
     flash("Heureka, deine Anzeige wurde aktualisiert,\n wenn du wüsstest wie viel Arbeit das hinter den Kullissen ist")
-    return redirect(url_for('ad_detail', ad_id = ad_id)) #Noch nicht existent, aber vorbereitend, sonst find ich das nicht mehr ;)
+    return redirect(url_for('my_ads', ad_id = ad_id)) #Noch nicht existent, aber vorbereitend, sonst find ich das nicht mehr ;)
 
 # ---------------------------
 #   404 Fehlerseite
