@@ -4,3 +4,4 @@ DB_USER = "root"
 DB_PASSWORD = ""
 DB_NAME = "bfwkleinanzeigen"
 UPLOAD_FOLDER = 'static/uploads'
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
