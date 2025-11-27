@@ -1,8 +1,36 @@
 {% extends "base.html" %}
 
-{% block title %}Startseite{% endblock %}
-
 {% block content %}
-<h1>Kleinanzeigen</h1>
-<p>Hier erscheinen später die Anzeigen.</p>
+<h1>Aktuelle Anzeigen</h1>
+
+{% if ads|length == 0 %}
+    <p>Es wurden noch keine Anzeigen erstellt.</p>
+{% else %}
+    <div class="ad-list">
+        {% for ad in ads %}
+            <div class="ad-card">
+                {% if ad.bilder_path %}
+                    <img 
+                        src="/{{ ad.bilder_path }}" 
+                        alt="{{ ad.titel }}" 
+                        style="width:200px; height:auto; display:block; margin-bottom:10px;"
+                    >
+                {% endif %}
+
+                <h2>{{ ad.titel }}</h2>
+
+                {% if ad.preis %}
+                    <p><strong>{{ "%.2f"|format(ad.preis) }} €</strong></p>
+                {% endif %}
+
+                <p>{{ ad.text[:120] }}{% if ad.text|length > 120 %}...{% endif %}</p>
+
+                <small>
+                    von {{ ad.vorname }} {{ ad.nachname }}  
+                    · {{ ad.datum }}
+                </small>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
 {% endblock %}
