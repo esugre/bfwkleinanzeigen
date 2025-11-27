@@ -33,6 +33,12 @@
                         Löschen
                     </button>
                 </form>
+                <!-- Edit-Button -->
+                <form action="{{ url_for('ad_edit', ad_id=ad.ad_id) }}" method="post" style="display:inline;">
+                    <button type="submit">
+                        Bearbeiten
+                    </button>
+                </form>
             </div>
         {% endfor %}
 {% endif %}
