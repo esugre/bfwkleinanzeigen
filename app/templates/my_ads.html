@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Meine Anzeigen</h1>
+
+{% if ads|length == 0 %}
+    <p>Du hast noch keine Anzeigen erstellt.</p>
+{% else %}
+    <div class="ad-list">
+        {% for ad in ads %}
+            <div class="ad-card">
+                {% if ad.bilder_path %}
+                    <img src="{{ url_for('static', filename=ad.bilder_path.split('static/')[-1]) }}"
+                         alt="{{ ad.titel }}"
+                         class="ad-thumb">
+                {% endif %}
+
+                <h2>{{ ad.titel }}</h2>
+
+                {% if ad.preis is not none %}
+                    <p><strong>Preis:</strong> {{ "%.2f"|format(ad.preis) }} €</p>
+                {% endif %}
+
+                <p><strong>Status:</strong> {{ ad.status }}</p>
+                <p><small>Erstellt am {{ ad.datum }}</small></p>
+
+                <!-- Optional: Kurztext -->
+                <p>{{ ad.text[:120] }}{% if ad.text|length > 120 %}...{% endif %}</p>
+
+                <!-- Löschen-Button -->
+                <form action="{{ url_for('delete_ad', ad_id=ad.ad_id) }}" method="post" style="display:inline;">
+                    <button type="submit" onclick="return confirm('Anzeige wirklich löschen?');">
+                        Löschen
+                    </button>
+                </form>
+            </div>
+        {% endfor %}
+{% endif %}
+{% endblock %}
