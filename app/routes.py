@@ -72,7 +72,7 @@ def index():
             users.vorname,
             users.nachname
         from ads
-        join users on ads_owner_id = users.user_id
+        join users on ads.owner_id = users.user_id
         order by ads.datum desc
         """
     )
