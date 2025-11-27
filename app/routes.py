@@ -398,6 +398,246 @@ def delete_ad(ad_id):
 
 
 # ---------------------------
+#   Anzeige bearbeiten
+# ---------------------------
+@app.route('/ads/<int:ad_id>/edit', methods=['GET', 'POST'])
+@login_required
+def ad_edit(ad_id):
+    """
+    Zum Bearbeiten der Anzeige (natürlich nur vom Besitzer der Anzeige).
+    get:
+        - Anzeige laden
+        - alle dazu gehörenden Bilder laden
+        - Infos + Bilder gehen ans Frontend
+    post:
+        - Titel, Text, Preis, usw. holen
+        - Vom Formular ids sammeln um ggf. Bilddateien als auch DB-Einträge zu löschen
+        - Ggf. neue Bilder speichern und in ad_image eintragen
+        - Konsistenz beim Cover -> holen wir uns ja nebst ad_images aus ads.bilder_path
+        - Wenn also das bisherige gelöscht wurde -> neues auswählen
+        - Gab es zuvor keine und es wurden Bilder hochgeladen, das erste neue als Cover nehmen.
+    """
+
+    # Fuck me, das wird viel zu umfangreich... egal
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Erstmal wieder die Anzeige aus der Datenbank holen
+    cursor.execute("""
+                    select ad_id, owner_id, titel, text, preis, status, bilder_path
+                   from ads
+                   where ad_id = %s
+                   """,
+                   (ad_id,)
+                   )
+    ad = cursor.fetchone()
+
+    if not ad:
+        cursor.close()
+        conn.close()
+        flash("Die Anzeige wurde nicht gefunden!", "error")
+        return redirect(url_for('my_ads'))
+    
+    # Gegenchecken ob es sich um eine Anzeige des angemeldeten Nutzers handelt.
+    if ad['owner_id'] != session.get('user_id'):
+        cursor.close()
+        conn.close()
+        flash("Diggi, das ist nicht deine Anzeige!", "error")
+        return redirect(url_for('my_ads'))
+    
+    # Bilderpfade der Anzeige holen
+    cursor.execute("""
+                    select image_id, file_path, sort_order, uploaded_at
+                   from ad_images
+                   where ad_id = %s
+                   order by sort_order asc
+                    """,
+                    (ad_id,)
+    )
+
+    images = cursor.fetchall()
+
+    ###### GET #####
+    # über get den ganzen Shizzle-Kadizzle anzeigen
+    if request.method == 'GET':
+        cursor.close()
+        conn.close()
+        # Übergabe an Template mit Anzeigeninfos + Liste aller Bilder
+        return render_template('ad_edit.html', ad=ad, images=images)
+    
+    ##### POST #####
+    # Formulardaten auslesen
+    titel = request.form.get('titel')
+    text = request.form.get('text')
+    preis_raw = request.form.get('preis')
+    status = request.form.get('status')
+
+    if not titel or not text:
+        cursor.close()
+        conn.close()
+        flash("Also wenigstens einen Titel und eine Beschreibung dazu bitte!", "error")
+        return redirect(url_for('ad_edit', ad_id=ad_id))
+    
+    # Preis Punkt-Komma-Gestöhne
+    preis = None
+    if preis_raw:
+        try:
+            preis = float(preis.raw.replace(',', '.'))
+        except ValueError:
+            cursor.close()
+            conn.close()
+            flash("Was auch immer du da eingegeben hast, eine Zahl ist das nicht!", "error")
+            return redirect(url_for('ad_edit', ad_id=ad_id))
+    
+    if not status:
+        status = ad['status']
+
+    # Als nächstes updaten wir jetzt diese ganzen Infos aus dem Formular (except le pictures)
+    cursor.execute("""
+                    update ads
+                   set  titel = %s,
+                        text = %s,
+                        preis = %s,
+                        status = %s
+                   where ad_id = %s
+                    """,
+                    (titel, text, preis, status, ad_id,)
+                    )
+
+    # Ok, als nächstes kümmern wir uns um die zu löschenden Bilder (ausgewählt mittels Checkbox im Formular)
+    # Das kann im Formular ungefähr so aussehen:
+    # <input type="checkbox", name="delete_images" value="{{ image.image_id }}">
+    to_delete_ids = request.form.getlist('delete_images') # Hier haben wir shcon mal die image_id's der Bilder
+
+    if to_delete_ids:
+        #Typecasten in int
+        try:
+            to_delete_ids = [int(x) for x in to_delete_ids]
+        except ValueError:
+            to_delete_ids = []
+
+    if to_delete_ids:
+        # Pfade extrahieren der zu löschenden Bilder
+        strings = ','.join(['%s'] * len(to_delete_ids))
+        cursor.execute(f"""
+                        select image_id, file_path
+                       from ad_images
+                       where image_id in ({strings})
+                        and ad_id = %s
+                       """,
+                       (*to_delete_ids, ad_id,)
+                       )
+    images_to_delete = cursor.fetchall()
+
+    # Bilder auf dem Server löschen
+    for img in images_to_delete:
+        rel_path = img['file_path'] # wäre dann zb 'static/uploads/2_bananenbild.jpg'
+        abs_path = os.path.join(app.root_path, rel_path)
+        try:
+            if os.path.exists(abs_path):
+                os.remove(abs_path)
+        except OSError:
+            # Nicht wild wenn das Bild schon weg ist
+            pass
+
+    # Jetzt noch die DB-Einträge aus ad_images löschen
+    cursor.execute(f"""
+                    delete from ad_images where image_id in ({strings})
+                    and ad_id = %s
+                    """,
+                    (*to_delete_ids, ad_id,)
+                    )
+    
+    # Schon total den Überblick verloren, ah ja die ggf. neuen Bilder müssen ja auch noch
+    # hinzugefügt werden
+    ########### NEW PICS ###########
+    files = request.files.getlist('images') # Analog zum Anlegen einer neuen Anzeige: 
+                                            # <input name='images' multiple> in dem edit Formular
+
+    upload_folder_rel = app.config['UPLOAD_FOLDER']            
+    upload_folder_abs = os.path.join(app.root_path, upload_folder_rel)
+    os.makedirs(upload_folder_abs, exist_ok=True)
+
+    # sort_order, warum.. klingt bei der Konzeption sinnvoll, macht Arbeit hier im Hinterstübchen
+    # also was ist die aktuelle max sort_order?
+    cursor.execute("""
+                    select coalesce(max(sort_order), 0) as max_sort
+                   from ad_images
+                   where ad_id = %s
+                   """,
+                   (ad_id,)
+                   )
+    row = cursor.fetchone()
+    current_max_sort = row['max_sort'] if row else 0
+
+    new_sort = current_max_sort
+    new_image_paths = [] # falls wir ein neues cover-bild in ads.bilder_path haben
+
+    for file in files:
+        if not file or not file.filename:
+            continue
+
+        if not allowed_file(file.filename):
+            flash(f"Bild '{file.filename}' hat leider kein erlaubtes Bildformat und wurde geschasst.")
+            continue
+
+        filename =  secure_filename(file.filename)
+        filename = f"{session.get('user_id')}_{filename}"
+
+        abs_path = os.path.join(upload_folder_abs, filename)
+        file.save(abs_path)
+
+        rel_path = os.path.join(upload_folder_rel, filename).replace('\\', '/')
+        new_image_paths.append(rel_path)
+
+        new_sort += 1
+        cursor.execute("""
+                        insert into ad_images (ad_id, file_path, sort_order)
+                       values (%s, %s, %s)
+                       """,
+                       (ad_id, rel_path, new_sort,)
+                       )
+        
+    ##### Cover-Bild #####
+    # Zwei Möglichkeiten
+    # Cover-Bild war gesetzt, könnte aber gelöscht worden sein
+    # Cover-Bild war leer, aber jetzt haben wir Bilder...
+    # Vorgehen:
+    # - Wenns noch Bilder gibt, einfach das mit dem kleinsten sort_order nehmen
+    # - wenn es keine Bilder mehr gibt, bilder_path auf NULL setzen
+
+    cursor.execute("""
+                    select file_path
+                   from ad_images
+                   where ad_id = %s
+                   order by sort_order asc
+                   limit 1
+                   """,
+                   (ad_id,)
+                   )
+    cover_row = cursor.fetchone()
+
+    if cover_row:
+        new_cover = cover_row['file_path']
+    else:
+        new_cover = None
+
+    cursor.execute("""
+                    update ads
+                   set bilder_path = %s
+                   where ad_id = %s
+                   """,
+                   (new_cover, ad_id,)
+                   )
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    flash("Heureka, deine Anzeige wurde aktualisiert,\n wenn du wüsstest wie viel Arbeit das hinter den Kullissen ist")
+    return redirect(url_for('ad_detail', ad_id = ad_id)) #Noch nicht existent, aber vorbereitend, sonst find ich das nicht mehr ;)
+
+# ---------------------------
 #   404 Fehlerseite
 # ---------------------------
 @app.errorhandler(404)
