@@ -491,13 +491,39 @@ def ad_edit(ad_id):
 
     images = cursor.fetchall()
 
+    # Noch die Kategorien dazuholen
+    cursor.execute("""
+                    select category_id, name
+                   from categories
+                   order by category_id asc
+                   """)
+    all_categories = cursor.fetchall()
+
+    # Dieser Anzeige zugeordnete Kategorien holen
+    cursor.execute("""
+                    select category_id
+                   from ads_categories
+                   where ad_id = %s
+                   """,
+                   (ad_id,)
+                   )
+
+    selected_rows = cursor.fetchall()
+    selected_category_ids = {row['category_id'] for row in selected_rows}
+
     ###### GET #####
     # über get den ganzen Shizzle-Kadizzle anzeigen
     if request.method == 'GET':
         cursor.close()
         conn.close()
         # Übergabe an Template mit Anzeigeninfos + Liste aller Bilder
-        return render_template('ad_edit.html', ad=ad, images=images)
+        return render_template(
+            'ad_edit.html', 
+            ad=ad, 
+            images=images, 
+            categories=all_categories,
+            selected_category_ids=selected_category_ids
+            )
     
     ##### POST #####
     # Formulardaten auslesen
@@ -545,7 +571,7 @@ def ad_edit(ad_id):
                     delete from ads_categories 
                    where ad_id = %s
                    """,
-                   (ad_id)
+                   (ad_id,)
                    )
     
     # neue Einträge/Änderungen hinzufügen
@@ -568,6 +594,7 @@ def ad_edit(ad_id):
     # Das kann im Formular ungefähr so aussehen:
     # <input type="checkbox", name="delete_images" value="{{ image.image_id }}">
     to_delete_ids = request.form.getlist('delete_images') # Hier haben wir shcon mal die image_id's der Bilder
+    images_to_delete = []
 
     if to_delete_ids:
         #Typecasten in int
@@ -577,8 +604,10 @@ def ad_edit(ad_id):
             to_delete_ids = []
 
     if to_delete_ids:
-        # Pfade extrahieren der zu löschenden Bilder
+        #Platzhalter für "%s, %s, %s" generieren
         strings = ','.join(['%s'] * len(to_delete_ids))
+
+        # Pfade extrahieren der zu löschenden Bilder
         cursor.execute(f"""
                         select image_id, file_path
                        from ad_images
@@ -587,26 +616,17 @@ def ad_edit(ad_id):
                        """,
                        (*to_delete_ids, ad_id,)
                        )
-    images_to_delete = cursor.fetchall()
+        images_to_delete = cursor.fetchall()
 
-    # Bilder auf dem Server löschen
-    for img in images_to_delete:
-        rel_path = img['file_path'] # wäre dann zb 'static/uploads/2_bananenbild.jpg'
-        abs_path = os.path.join(app.root_path, rel_path)
-        try:
-            if os.path.exists(abs_path):
-                os.remove(abs_path)
-        except OSError:
-            # Nicht wild wenn das Bild schon weg ist
-            pass
+######
 
-    # Jetzt noch die DB-Einträge aus ad_images löschen
-    cursor.execute(f"""
-                    delete from ad_images where image_id in ({strings})
-                    and ad_id = %s
-                    """,
-                    (*to_delete_ids, ad_id,)
-                    )
+        # Jetzt noch die DB-Einträge aus ad_images löschen
+        cursor.execute(f"""
+                        delete from ad_images where image_id in ({strings})
+                        and ad_id = %s
+                        """,
+                        (*to_delete_ids, ad_id,)
+                        )
     
     # Schon total den Überblick verloren, ah ja die ggf. neuen Bilder müssen ja auch noch
     # hinzugefügt werden
@@ -694,8 +714,19 @@ def ad_edit(ad_id):
     cursor.close()
     conn.close()
 
+        # Bilder auf dem Server löschen
+    for img in images_to_delete:
+        rel_path = img['file_path'] # wäre dann zb 'static/uploads/2_bananenbild.jpg'
+        abs_path = os.path.join(app.root_path, rel_path)
+        try:
+            if os.path.exists(abs_path):
+                os.remove(abs_path)
+        except OSError:
+            # Nicht wild wenn das Bild schon weg ist
+            pass
+
     flash("Heureka, deine Anzeige wurde aktualisiert,\n wenn du wüsstest wie viel Arbeit das hinter den Kullissen ist")
-    return redirect(url_for('my_ads', ad_id = ad_id)) #Noch nicht existent, aber vorbereitend, sonst find ich das nicht mehr ;)
+    return redirect(url_for('my_ads')) #Noch nicht existent, aber vorbereitend, sonst find ich das nicht mehr ;)
 
 # ---------------------------
 #   404 Fehlerseite
