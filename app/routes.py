@@ -228,6 +228,7 @@ def ad_new():
     titel = request.form.get('titel')
     text = request.form.get('text')
     preis_opt = request.form.get('preis') # besser als optionales Feld
+    category_ids_raw = request.form.getlist('categories')
 
     # Check ob alles ausgefüllt wurde
     if not titel or not text:
@@ -305,6 +306,23 @@ def ad_new():
         """,
         (owner_id, titel, text, preis, hauptbild)
     )
+
+    # Noch die mit dieser Ad verknüpften Kategorien in die ads_categories eintragen 
+    category_ids = []
+    for cid in category_ids_raw:
+        try:
+            category_ids.append(int(cid))
+        except ValueError:
+            continue
+
+    for cid in category_ids:
+        cursor.execute("""
+                        insert into ads_categories 
+                       (ad_id, category_id) 
+                       values (%s, %s)
+                       """,
+                       (ad_id, cid)
+                       )
 
     # Jetzt holen wir uns noch die ad_id der gerade erstellten Anzeige (auto increment), 
     # damit wir die Bilder in der ad_images Tabelle speichern können
@@ -471,6 +489,7 @@ def ad_edit(ad_id):
     text = request.form.get('text')
     preis_raw = request.form.get('preis')
     status = request.form.get('status')
+    category_ids_raw = request.form.getlist('categories')
 
     if not titel or not text:
         cursor.close()
@@ -503,6 +522,31 @@ def ad_edit(ad_id):
                     """,
                     (titel, text, preis, status, ad_id,)
                     )
+
+    # Kategorien entfernen/hinzufügen
+    # alte Einträge entfernen
+    cursor.execute("""
+                    delete from ads_categories 
+                   where ad_id = %s
+                   """,
+                   (ad_id)
+                   )
+    
+    # neue Einträge/Änderungen hinzufügen
+    category_ids = []
+    for cid in category_ids_raw:
+        try:
+            category_ids.append(int(cid))
+        except ValueError:
+            continue
+
+    for cid in category_ids:
+        cursor.execute("""
+                        insert into ads_categories (ad_id, category_id)
+                       values (%s, %s)
+                       """,
+                       (ad_id, cid,)
+                       )
 
     # Ok, als nächstes kümmern wir uns um die zu löschenden Bilder (ausgewählt mittels Checkbox im Formular)
     # Das kann im Formular ungefähr so aussehen:
