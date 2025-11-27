@@ -25,6 +25,26 @@
         <input type="number" step="0.01" id="preis" name="preis">
     </div>
 
+    <!-- Kategorien -->
+     <fieldset>
+        <legend>Kategorien</legend>
+        {% if categories %}
+            {% for cat in categories %}
+                <label>
+                    <input type="checkbox"
+                    name="categories"
+                    value="{{ cat.category_id }}">
+                {{ cat.name }}
+                </label><br>
+            {% endfor %}
+        {% else %}
+                <p><em>Keine Kategorien vorhanden.</em></p>
+        {% endif %}
+     </fieldset>
+
+     
+     <!-- Bilder -->
+
     <div>
         <label for="images">Bilder (optional)</label>
         {# multiple erlaubt mehrere Dateien auf einmal #}
