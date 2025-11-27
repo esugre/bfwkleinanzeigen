@@ -218,11 +218,27 @@ def logout():
 def ad_new():
     """Neue Route zum Erstellen einer neuen Anzeige mit Bild-Upload.
     - Get zeigt das Formular an.
+    - Kategorien vorher noch aus der Datenbank holen
     - Post verarbeitet die Formulardaten + Bild und speichert sie in der DB."""
 
     # Wenn die Seite per Get aufgerufen wird, zeigt sie das Formular an
     if request.method == 'GET':
-        return render_template('ads_new.html')
+        #DB-Verbindung
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        #Kategorien abholen
+        cursor.execute("""
+                        select category_id, name 
+                       from categories
+                       order by category_id asc
+                       """)
+        categories = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+
+        return render_template('ads_new.html', categories=categories)
     
     # Formulardaten auslesen
     titel = request.form.get('titel')
@@ -307,6 +323,10 @@ def ad_new():
         (owner_id, titel, text, preis, hauptbild)
     )
 
+    # Jetzt holen wir uns noch die ad_id der gerade erstellten Anzeige (auto increment), 
+    # damit wir die Bilder in der ad_images Tabelle speichern können
+    ad_id = cursor.lastrowid
+
     # Noch die mit dieser Ad verknüpften Kategorien in die ads_categories eintragen 
     category_ids = []
     for cid in category_ids_raw:
@@ -323,10 +343,6 @@ def ad_new():
                        """,
                        (ad_id, cid)
                        )
-
-    # Jetzt holen wir uns noch die ad_id der gerade erstellten Anzeige (auto increment), 
-    # damit wir die Bilder in der ad_images Tabelle speichern können
-    ad_id = cursor.lastrowid
 
     # Bilder in der ad_images Tabelle speichern
     # Jede Datei bekommt einen eigenen Eintrag mit sort_order
