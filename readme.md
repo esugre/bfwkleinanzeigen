@@ -11,19 +11,20 @@ cd bfw-kleinanzeigen
 
 Linux:
 ```bash
-python3 -m venv venv
+python3.12 -m venv venv
 source venv/bin/activate
 ```
 unter Windows:
 ```bash
-python -m venv venv
+python3.12 -m venv venv
 .\venv\Scripts\activate
 ```
 
 ## 3. Abhängigkeiten installieren
 
 ```bash
-pip install -r requirements.txt
+pip install flask
+pip install mysql-connector-python
 ```
 
 ## 4. Datenbank einrichten
