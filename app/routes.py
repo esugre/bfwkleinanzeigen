@@ -1,6 +1,6 @@
 from flask import (
     render_template, request, redirect, url_for,
-    flash, session
+    flash, session, current_app
 )
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
@@ -114,7 +114,7 @@ def my_ads():
             ads.status,
             ads.bilder_path
         from ads
-        whereads.owner_id = %s
+        where ads.owner_id = %s
         order by ads.datum desc
         """,
         (owner_id,)
@@ -329,6 +329,72 @@ def ad_new():
     # Noch Feedback an den Nutzer und zurück zur Startseite
     flash("Anzeige erfolgreich erstellt!")
     return redirect(url_for('index'))
+
+
+# ---------------------------
+#   Anzeige löschen
+# ---------------------------
+@app.route('/ads/<int:ad_id>/delete', methods=['GET','POST'])
+@login_required
+def delete_ad(ad_id):
+
+    # Erstmal die Anzeige holen, wenn möglich:
+    user_id = session.get('user_id')
+    if not user_id:
+        flash("Bitte logge dich zuerst ein!", "error")
+        return redirect(url_for('login'))
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Kurzcheck ob das überhaupt des Nutzers Anzeige ist
+    cursor.execute("""
+                    select owner_id from ads where ad_id =%s
+                   """,
+                   (ad_id,)
+                   )
+    ad = cursor.fetchone()
+
+    if not ad or ad['owner_id'] != user_id:
+        flash("Sorry, die Anzeige wurde leider nicht gefunden oder du hast keine Berechtigung dazu.", "error")
+        return redirect(url_for('my_ads'))
+    
+    # Pfade der lokal gespeicherten Bilder aus der Datenbank holen (ad_images)
+    cursor.execute("""
+                    select file_path from ad_images where ad_id = %s
+                   """,
+                   (ad_id,)
+                   )
+    image_rows = cursor.fetchall()
+
+    # Liste mit extrahierten Bildpfaden:
+    file_paths = {row['file_path'] for row in image_rows}
+
+    # Bilder lokal löschen
+    base_dir = current_app.root_path # Sowas wie /home/user/bfw-kleinanzeigen
+
+    for rel_path in file_paths:
+        full_path = os.path.join(base_dir, rel_path)
+        if os.path.exists(full_path):
+            try:
+                os.remove(full_path)
+            except Exception:
+                pass
+    
+    # Ad-Datensatz löschen -> delete on cascade löscht automatisch:
+        # alle Bild-Datensätze aus ad_images
+        # alle Kategorienzuordnungen 
+    cursor.execute("""
+                    delete from ads where ad_id = %s
+                   """, (ad_id,)
+                   )
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+
+    flash("Die Anzeige wurde erfolgreich gelöscht!", "success")
+    return redirect(url_for('my_ads'))
 
 
 # ---------------------------
