@@ -1,0 +1,16 @@
+INSERT INTO categories (name) VALUES
+('Auto, Rad & Boot'),
+('Dienstleistungen'),
+('Eintrittskarten & Tickets'),
+('Elektronik'),
+('Familie, Kind & Baby'),
+('Freizeit, Hobby & Nachbarschaft'),
+('Haus & Garten'),
+('Haustiere'),
+('Immobilien'),
+('Jobs'),
+('Mode & Beauty'),
+('Musik, Filme & Bücher'),
+('Nachbarschaftshilfe'),
+('Unterricht & Kurse'),
+('Verschenken & Tauschen');
