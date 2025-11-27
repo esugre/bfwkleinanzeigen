@@ -46,6 +46,26 @@
     </div>
   </fieldset>
 
+  <fieldset>
+    <legend>KAtegorien</legend>
+
+    {% if categories %}
+        {% for cat in categories %}
+            <label>
+                <input
+                    type="checkbox"
+                    name="categories"
+                    value="{{ cat.category_id }}"
+                    {% if cat.category_id in selected_category_ids %}checked{% endif %}
+                    >
+                {{ cat.name }}
+            </label><br>
+        {% endfor %}
+    {% else %}
+            <p><em>Keine Kategorien vorhanden.</em></p>
+    {% endif %}
+  </fieldset>
+
   <!-- Vorhandene Bilder verwalten -->
   <fieldset class="images-existing">
     <legend>Vorhandene Bilder</legend>
