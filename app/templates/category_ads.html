@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h1>Anzeigen in Kategorie: {{ active_category.name }}</h1>
+
+  <aside>
+    <h3>Kategorien</h3>
+    <ul>
+      {% for cat in categories %}
+        <li>
+          <a href="{{ url_for('ads_by_category', category_id=cat.category_id) }}">
+            {{ cat.name }}
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  </aside>
+
+  <section class="ad-list">
+    {% if ads %}
+      {% for ad in ads %}
+        <article class="ad-card">
+            <a href="{{ url_for('ad_detail', ad_id=ad.ad_id) }}">
+                {% if ad.bilder_path %}
+                {% set clean_path = ad.bilder_path.replace('static/', '') %}
+              <img src="{{ url_for('static', filename=clean_path) }}"
+                   alt="Coverbild zu {{ ad.titel }}">
+            {% endif %}
+
+            <h2>{{ ad.titel }}</h2>
+            <p class="price">{{ "%.2f"|format(ad.preis) }} €</p>
+            <p class="owner">von {{ ad.vorname }} {{ ad.nachname }}</p>
+          </a>
+
+          {% if ad.categories %}
+            <div class="ad-categories">
+              {% for cat in ad.categories %}
+                <span class="badge">
+                  <a href="{{ url_for('ads_by_category', category_id=cat.category_id) }}">
+                    {{ cat.name }}
+                  </a>
+                </span>
+              {% endfor %}
+            </div>
+          {% endif %}
+        </article>
+      {% endfor %}
+    {% else %}
+      <p>In dieser Kategorie gibt es aktuell keine Anzeigen.</p>
+    {% endif %}
+  </section>
+{% endblock %}

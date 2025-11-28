@@ -191,10 +191,12 @@ def ads_by_category(category_id):
     ad_categories_map = {} 
 
     if ad_ids:
-        placeholder = ','.join(['%'] * len(ad_ids)) # brauchen wir gleich für die abfrage
+        # anzahl platzhalter = anzahl ids
+        placeholder_list = ['%s'] * len(ad_ids)
+        placeholder = ','.join(placeholder_list) # brauchen wir gleich für die abfrage
         abfrage = f"""
                     select 
-                        ad.ad_id,
+                        ac.ad_id,
                         c.category_id,
                         c.name
                     from ads_categories as ac
@@ -203,8 +205,8 @@ def ads_by_category(category_id):
                     order by c.name asc
                     """
         cursor.execute(abfrage, tuple(ad_ids))
-
         dataset = cursor.fetchall()
+
         for set in dataset:
             ad_id =set['ad_id']
             ad_categories_map.setdefault(ad_id, []).append({
@@ -223,6 +225,13 @@ def ads_by_category(category_id):
         categories=all_categories
     )
 
+
+# ---------------------------
+#   Ad-Detail-Site (DUMMY SO FAR)
+# ---------------------------
+@app.route('/ads/<int:ad_id>')
+def ad_detail(ad_id):
+    return f"Detail-Seite für {ad_id} ist leider noch nicht implementiert"
 
 
 # ---------------------------
