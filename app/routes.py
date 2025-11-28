@@ -1,6 +1,6 @@
 from flask import (
     render_template, request, redirect, url_for,
-    flash, session, current_app
+    flash, session, current_app, abort
 )
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
@@ -21,6 +21,18 @@ def get_db_connection():
         database=app.config['DB_NAME']
     )
     return connection
+
+
+# ---------------------------
+#   Category-Helper-Function
+# ---------------------------
+def get_all_categories(cursor):
+    cursor.execute("""
+                    select category_id, name
+                   from categories
+                   order by category_id asc
+                   """)
+    return cursor.fetchall()
 
 
 # ---------------------------
@@ -125,6 +137,93 @@ def my_ads():
     
     # Feierliche Übergabe an Romis Template
     return render_template('my_ads.html', ads=ads)
+
+
+# ---------------------------
+#   Kategorie-Filter-Route (public)
+# ---------------------------
+@app.route('/category/<int:category_id>')
+def ads_by_category(category_id):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Die jeweilige Kategorie aus dem Äther saugen
+    cursor.execute("""
+                    select category_id, name
+                   from categories
+                   where category_id = %s
+                   """,
+                   (category_id,)
+                   )
+    category = cursor.fetchone()
+
+    if category is None:
+        abort(404) # Endlich mal auf die schöne Fehlerseite verweisen
+
+    # Trotzdem die restlichen Kategorien holen, damit man diese in die Navi oder irgendeine Seitenleiste einpflegen kann
+    all_categories = get_all_categories(cursor)
+
+    # Alle Anzeigen die der ausgewählten Kategorie zugeordnet sind
+    cursor.execute("""
+                    select
+                        a.ad_id,
+                        a.owner_id,
+                        a.titel,
+                        a.text,
+                        a.preis,
+                        a.status,
+                        a.datum,
+                        a.bilder_path,
+                        u.vorname,
+                        u.nachname
+                   from ads as a
+                   join ads_categories as ac on ac.ad_id = a.ad_id
+                   join users as u on u.user_id = a.owner_id
+                   where ac.category_id = %s
+                   order by a.datum desc
+                   """,
+                   (category_id,)
+                   )
+    ads = cursor.fetchall()
+
+    # Für Tags noch Kategorien pro Ad
+    ad_ids = [ad['ad_id'] for ad in ads] # Erstmal alle ad_ids in eine Liste schafueln
+    ad_categories_map = {} 
+
+    if ad_ids:
+        placeholder = ','.join(['%'] * len(ad_ids)) # brauchen wir gleich für die abfrage
+        abfrage = f"""
+                    select 
+                        ad.ad_id,
+                        c.category_id,
+                        c.name
+                    from ads_categories as ac
+                    join categories as c on c.category_id = ac.category_id
+                    where ac.ad_id in ({placeholder})
+                    order by c.name asc
+                    """
+        cursor.execute(abfrage, tuple(ad_ids))
+
+        dataset = cursor.fetchall()
+        for set in dataset:
+            ad_id =set['ad_id']
+            ad_categories_map.setdefault(ad_id, []).append({
+                'category_id': set['category_id'],
+                'name': set['name'],
+            })
+    
+    # Kategorien in die Anzeige schieben
+    for ad in ads:
+        ad['categories'] = ad_categories_map.get(ad['ad_id'], [])
+    
+    return render_template(
+        'category_ads.html',
+        ads=ads,
+        active_category=category,
+        categories=all_categories
+    )
+
+
 
 # ---------------------------
 #   Registrierung
