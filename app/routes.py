@@ -426,6 +426,7 @@ def ad_detail(ad_id):
         categories = all_categores #die "globale" Kategorienliste
         )
 
+
 # ---------------------------
 #   Registrierung
 # ---------------------------
@@ -1038,6 +1039,44 @@ def ad_edit(ad_id):
 
     flash("Heureka, deine Anzeige wurde aktualisiert,\n wenn du wüsstest wie viel Arbeit das hinter den Kullissen ist")
     return redirect(url_for('my_ads')) #Noch nicht existent, aber vorbereitend, sonst find ich das nicht mehr ;)
+
+
+# ---------------------------
+#   Admin/Redakteur:in Moderation (new pending Ads)
+# ---------------------------
+@app.route('/admin/ads/pending')
+@login_required
+def admin_pending_ads():
+    if session.get('rolle') not in ('admin', 'redakteur'):
+        abort(403)
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("""
+                    select
+                   a.ad_id,
+                   a.owner_id,
+                   a.titel,
+                   a.text,
+                   a.preis,
+                   a.status,
+                   a.datum,
+                   a.bilder_path,
+                   u.vorname,
+                   u.nachname
+                   from ads as a
+                   join users as u on u.user_id = a.owner_id
+                   where a.status = "pending"
+                   order by a.datum asc
+                   """)
+
+    ads = cursor.fetchall()
+    
+    return render_template('admin_pending_ads.html', ads=ads)
+    # Kleine Tabelle mit Titel, User, Datum, Buttons Freischalten/Löschen 
+    # Anklickbar -> ad_detail - Site
+
 
 # ---------------------------
 #   404 Fehlerseite
