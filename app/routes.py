@@ -478,10 +478,12 @@ def login():
     conn.close()
 
     if user and check_password_hash(user['passwort_hash'], password):
-        session['user_id'] = user['user_id']         # Spalte heißt user_id
+        session['user_id'] = user['user_id']         
         session['email'] = user['email']
         session['vorname'] = user['vorname']
         session['nachname'] = user['nachname']
+        session['rolle'] = user['rolle']
+        session['logged_in'] = True
         flash("Erfolgreich eingeloggt.")
         return redirect(url_for('index'))
     else:
