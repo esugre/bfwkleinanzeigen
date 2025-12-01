@@ -701,7 +701,11 @@ def delete_ad(ad_id):
                    )
     ad = cursor.fetchone()
 
-    if not ad or ad['owner_id'] != user_id:
+    # Berechtigungen checken
+    current_user_id = session.get('user_id')
+    rolle = session.get('rolle')
+
+    if not ad or (ad['owner_id'] != current_user_id and rolle not in ('admin', 'redakteur')):
         flash("Sorry, die Anzeige wurde leider nicht gefunden oder du hast keine Berechtigung dazu.", "error")
         return redirect(url_for('my_ads'))
     
@@ -784,8 +788,11 @@ def ad_edit(ad_id):
         flash("Die Anzeige wurde nicht gefunden!", "error")
         return redirect(url_for('my_ads'))
     
-    # Gegenchecken ob es sich um eine Anzeige des angemeldeten Nutzers handelt.
-    if ad['owner_id'] != session.get('user_id'):
+    # Berechtigungen checken
+    current_user_id = session.get('user_id')
+    rolle = session.get('rolle')
+
+    if ad['owner_id'] != current_user_id and rolle not in ('admin', 'redakteur'):
         cursor.close()
         conn.close()
         flash("Diggi, das ist nicht deine Anzeige!", "error")
@@ -1100,8 +1107,6 @@ def admin_approve_ad(ad_id):
 
     flash("Anzeige wurde freigeschaltet.", "success")
     return redirect(url_for('admin_pending_ads'))
-
-
 
 
 # ---------------------------
