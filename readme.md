@@ -52,6 +52,10 @@ Wieder ins Projektverzeichnis wechseln und dort das Terminal starten:
 ```bash
 sudo mariadb -u username -p bfwkleinanzeigen < sql/schema.sql
 ```
+Zusätzlich noch die Kategorien importieren:
+```bash
+sudo mariadb -u username -p bfwkleinanzeigen < sql/categories.sql
+```
 
 ### Unter Windows mit XAMPP
 
