@@ -29,16 +29,24 @@
                 {{ ad.titel }}
               </a>
             </td>
-            <td>{{ "%.2f"|format(ad.preis) }} €</td>
+
+            <td>
+              {% if ad.preis is not none %}
+                {{ "%.2f"|format(ad.preis|float) }} €
+              {% else %}
+                -
+              {% endif %}
+            </td>
+
             <td>{{ ad.vorname }} {{ ad.nachname }}</td>
-            <td>{{ ad.datum[:10].replace('-', '.') }} {{ ad.datum[11:16] }}</td>
+            <td>{{ ad.datum }}</td>
             <td>
               <form action="{{ url_for('admin_approve_ad', ad_id=ad.ad_id) }}"
                     method="post" style="display:inline;">
                 <button type="submit">Freischalten</button>
               </form>
 
-              <form action="{{ url_for('ad_delete', ad_id=ad.ad_id) }}"
+              <form action="{{ url_for('delete_ad', ad_id=ad.ad_id) }}"
                     method="post" style="display:inline;">
                 <button type="submit"
                         onclick="return confirm('Anzeige wirklich löschen?');">
