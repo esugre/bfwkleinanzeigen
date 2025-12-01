@@ -263,12 +263,80 @@ def ads_by_category(category_id):
 
 
 # ---------------------------
-#   Ad-Detail-Site (DUMMY SO FAR)
+#   Ad-Detail-Site
 # ---------------------------
 @app.route('/ads/<int:ad_id>')
 def ad_detail(ad_id):
-    return f"Detail-Seite für {ad_id} ist leider noch nicht implementiert"
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
 
+    # Anzeige mit all ihren Details laden
+    cursor.execute("""
+                    select
+                   a.ad_id,
+                   a.owner_id,
+                   a.titel,
+                   a.text,
+                   a.preis,
+                   a.status,
+                   a.datum,
+                   a.bilder_path,
+                   u.vorname,
+                   u.nachname,
+                   u.email
+                   from ads as a
+                   join users as u on u.user_id = a.owner_id
+                   where a.ad_id = %s
+                   """,
+                   (ad_id,)
+                   )
+    ad = cursor.fetchone()
+
+    if ad is None:
+        abort(404)
+
+    # Jetzt noch die weiteren Pfade zu den Bilder der Anzeige aus der ad_images Tabelle holen
+    cursor.execute("""
+                    select 
+                   image_id,
+                   file_path,
+                   sort_order,
+                   uploaded_at
+                   from ad_images
+                   where ad_id = %s,
+                   order by sort_order asc uploaded_at asc
+                   """,
+                   (ad_id,)
+                   )
+    images = cursor.fetchall()
+    
+    # Kategorien der Anzeige
+    cursor.execute("""
+                    select 
+                   c.category_id,
+                   c.name
+                   from ads_categories as ac
+                   join categories as c on c.category_id = ac.category_id
+                   where ac.ad_id = %s
+                   order by c.name asc
+                   """,
+                   (ad_id,)
+                   )
+    ad_categories = cursor.fetchall()
+
+    # Und noch alle Kategorien, just for the sake of it
+    all_categores = get_all_categories(cursor)
+
+    # Kategorien an das Objekt hängen (nur für bessere Konsistenz der Daten)
+    ad['categories'] = ad_categories
+
+    # Feierliche Übergabe an Romis Template
+    return render_template(
+        'ad_detail.html', 
+        ad=ad,
+        images = images,
+        categories = all_categores #die "globale" Kategorienliste
+        )
 
 # ---------------------------
 #   Registrierung
