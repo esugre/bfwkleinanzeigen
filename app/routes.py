@@ -303,8 +303,8 @@ def ad_detail(ad_id):
                    sort_order,
                    uploaded_at
                    from ad_images
-                   where ad_id = %s,
-                   order by sort_order asc uploaded_at asc
+                   where ad_id = %s
+                   order by sort_order asc, uploaded_at asc
                    """,
                    (ad_id,)
                    )
