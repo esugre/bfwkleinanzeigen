@@ -85,15 +85,51 @@ def index():
             users.nachname
         from ads
         join users on ads.owner_id = users.user_id
+        where ads.status = "aktiv"
         order by ads.datum desc
         """
     )
 
     ads = cursor.fetchall()
+
+    # Kategorien noch aus der Datenbank holen für Sidebar/Navi oder so
+    all_categories = get_all_categories(cursor)
+
+    # Da Anzeigen mehrere Kategorien haben können, alle Kategorien pro ad nachladen
+    ad_ids = [ad['ad_id'] for ad in ads]
+    ad_categories_map = {}
+
+    if ad_ids:
+        ids_str = ",".join(str(_id) for _id in ad_ids)
+
+        abfrage = f"""
+                    select
+                    ac.ad_id,
+                    c.category_id,
+                    c.name
+                    from ads_categories as ac
+                    join categories as c on c.category_id = ac.category_id
+                    where ac.ad_id in ({ids_str})
+                    order by c.name asc
+                    """
+        cursor.execute(abfrage)
+        dataset = cursor.fetchall()
+
+        for row in dataset_
+        ad_id = row['ad_id']
+        ad_categories_map.setdefault(ad_id, []).append({
+            'category_id': row['category_id'],
+            'name': row['name'],
+        })
+    
+    # Kategorien an die Anzeige mit dranhängen
+    for ad in ads:
+        ad['categories'] = ad_categories_map.get(ad['ad_id'], [])
+
     cursor.close()
     conn.close()
 
-    return render_template('index.html', ads=ads)  # Übergabe an die Front, do whatever you want wif it! ;)
+    return render_template('index.html', ads=ads, categories=all_categories)  # Übergabe an die Front, do whatever you want wif it! ;)
 
 
 # ---------------------------
