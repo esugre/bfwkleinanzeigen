@@ -1094,7 +1094,7 @@ def admin_dashboard():
 
 
 # ---------------------------
-#   Admin/Redakteur:in Moderation (new pending Ads)
+#   Admin/Redakteur:in Moderation -> New pending Ads (aktuell integriert im Admin Dashboard)
 # ---------------------------
 @app.route('/admin/ads/pending')
 @login_required
