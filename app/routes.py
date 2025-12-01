@@ -1,6 +1,6 @@
 from flask import (
     render_template, request, redirect, url_for,
-    flash, session, current_app, abort
+    flash, session, current_app, abort, jsonify
 )
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
@@ -58,6 +58,83 @@ def login_required(f):
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated_function
+
+
+# ---------------------------
+#   Search Endpunkt
+# ---------------------------
+@app.route('/search')
+def search():
+
+    """
+        Sucht in ads.titel + ads.text
+        GET /search?search_term=...
+        gibt komplette Anzeigenobjekte zurück (mit owner & categories)
+        Übergabe als json für JS-Fetch
+    """
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    search_term = request.args.get('search_term', '').strip()
+
+    if not search_term:
+        return jsonify([])
+    
+    like = f"%{search_term}%"
+
+    cursor.execute("""
+                select 
+                    a.ad_id,
+                    a.owner_id,
+                    a.titel,
+                    a.text,
+                    a.preis,
+                    a.status,
+                    a.datum,
+                    a.bilder_path,
+                    u.vorname,
+                    u.nachname
+                from ads as a
+                join users as u on u.user_id = a.owner_id
+                where
+                    upper(a.titel) like upper(%s)
+                    or upper(a.text) like upper(%s)
+                order by
+                    a.datum desc
+                   """,
+                   (like, like)
+                   )
+    ads = cursor.fetchall()
+
+    # Profilaktisch Kategorien pro Anzeige mitgeben, sollte mir langsam eine Funktion dafür schreiben...
+    ad_ids = [ad['ad_id'] for ad in ads]
+    ad_categories_map = {}
+
+    if ad_ids:
+        ids_str = ','.join(str(_id) for _id in ad_ids)
+
+        cursor.execute("""
+                    select
+                       ac.ad_id,
+                       c.category_id,
+                       c.name
+                    from ads_categories as ac
+                    join categories as c on c.category_id = ac.category_id
+                    where ac.ad_id in ({ids_str})
+                       """)
+        
+        rows = cursor.fetchall()
+        for row in rows:
+            ad_categories_map.setdefault(row['ad_id'], []).append({
+                'category_id': row['category_id'],
+                'name': row['name'],
+            })
+
+    for ad in ads:
+        ad['categories'] = ad_categories_map.get(ad['ad_id'], [])
+    
+    return jsonify(ads)
 
 
 # ---------------------------
