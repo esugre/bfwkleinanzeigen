@@ -552,8 +552,17 @@ def ad_new():
             flash("Bitte einen gültigen Preis angeben.")
             return redirect(url_for('ad_new'))
     
-    # Jetzt noch den Besitzer der Anzeige aus der Session holen
+    # Jetzt noch den Anzeigen-Besitzer und seine Rolle aus der Session holen
     owner_id = session.get('user_id')
+    rolle = session.get('rolle', 'user')
+
+    # Unterscheidung user/admin bzw. Redakteur:in
+    # Normaler user -> Anzeigen-Status "pending"
+    # Admin/Redakteur -> direkt Anzeigen-Status "aktiv"
+    if rolle in ('admin', 'redakteur'):
+        status = "aktiv"
+    else:
+        status = "pending"
 
     # Jetzt noch die Bilder verarbeiten
     # "images" ist der Name des File-Input-Felds im Formular // name="" im <input type="file">
@@ -608,10 +617,10 @@ def ad_new():
     # Eintrag in die ads-Tabelle gemäß Schema
     cursor.execute(
         """
-        insert into ads (owner_id, titel, text, preis, bilder_path)
-        values (%s, %s, %s, %s, %s)
+        insert into ads (owner_id, titel, text, preis, status, bilder_path)
+        values (%s, %s, %s, %s, %s, %s)
         """,
-        (owner_id, titel, text, preis, hauptbild)
+        (owner_id, titel, text, preis, status, hauptbild)
     )
 
     # Jetzt holen wir uns noch die ad_id der gerade erstellten Anzeige (auto increment), 
