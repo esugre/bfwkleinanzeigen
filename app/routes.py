@@ -1079,6 +1079,32 @@ def admin_pending_ads():
 
 
 # ---------------------------
+#   Admin/Redakteur:in Freischalt-Route
+# ---------------------------
+@app.route('/admin/ads/<int:ad_id>/approve', methods=['POST'])
+@login_required
+def admin_approve_ad(ad_id):
+    if session.get('rolle') not in ('admin', 'redakteur'):
+        abort(403)
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("""
+                    update ads set status = "aktiv" where ad_id = %s
+                   """, 
+                   (ad_id,)
+                   )
+    
+    conn.commit()
+
+    flash("Anzeige wurde freigeschaltet.", "success")
+    return redirect(url_for('admin_pending_ads'))
+
+
+
+
+# ---------------------------
 #   404 Fehlerseite
 # ---------------------------
 @app.errorhandler(404)
