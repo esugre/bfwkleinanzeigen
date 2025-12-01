@@ -115,12 +115,12 @@ def index():
         cursor.execute(abfrage)
         dataset = cursor.fetchall()
 
-        for row in dataset_
-        ad_id = row['ad_id']
-        ad_categories_map.setdefault(ad_id, []).append({
-            'category_id': row['category_id'],
-            'name': row['name'],
-        })
+        for row in dataset:
+            ad_id = row['ad_id']
+            ad_categories_map.setdefault(ad_id, []).append({
+                'category_id': row['category_id'],
+                'name': row['name'],
+            })
     
     # Kategorien an die Anzeige mit dranhängen
     for ad in ads:
