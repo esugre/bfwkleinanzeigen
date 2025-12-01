@@ -1049,6 +1049,51 @@ def ad_edit(ad_id):
 
 
 # ---------------------------
+#   Admin Dashboard
+# ---------------------------
+@app.route('/admin')
+@login_required
+def admin_dashboard():
+    if session.get('rolle') not in ('admin', 'redakteur'):
+        abort(403)
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("select count(*) as cnt from ads where status = 'pending' ")
+    pending_count = cursor.fetchone()['cnt'] # Anzahl noch freizuschaltender Anzeigen
+
+    cursor.execute("select count(*) as cnt from ads where status = 'aktiv' ")
+    active_count = cursor.fetchone()['cnt'] # Anzahl aktiver Anzeigen
+
+    cursor.execute("""
+                select
+                a.ad_id,
+                a.owner_id,
+                a.titel,
+                a.text,
+                a.preis,
+                a.status,
+                a.datum,
+                a.bilder_path,
+                u.vorname,
+                u.nachname
+                from ads as a
+                join users as u on u.user_id = a.owner_id
+                where a.status = "pending"
+                order by a.datum asc
+                """)
+    pending_ads = cursor.fetchall() # Alle Ads die noch freizuschalten sind
+
+    return render_template(
+        'admin_dashboard.html',
+        pending_count=pending_count,
+        active_count=active_count,
+        pending_ads=pending_ads
+    )
+
+
+# ---------------------------
 #   Admin/Redakteur:in Moderation (new pending Ads)
 # ---------------------------
 @app.route('/admin/ads/pending')
