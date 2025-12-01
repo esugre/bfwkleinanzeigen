@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="ad-detail-page">
+
+  <aside class="sidebar">
+    <h3>Kategorien</h3>
+    <ul>
+      {% for cat in categories %}
+        <li>
+          <a href="{{ url_for('ads_by_category', category_id=cat.category_id) }}">
+            {{ cat.name }}
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  </aside>
+
+  <main class="ad-detail">
+    <h1>{{ ad.titel }}</h1>
+
+    <p class="price">{{ "%.2f"|format(ad.preis) }} €</p>
+
+    <p class="owner">
+      Anbieter: {{ ad.vorname }} {{ ad.nachname }}
+      {# optional, wenn du Email anzeigen willst #}
+      <br>E-Mail: {{ ad.email }}
+    </p>
+
+    {# Coverbild – Pfad bereinigen #}
+    {% if ad.bilder_path %}
+      {% set clean_cover = ad.bilder_path.replace('static/', '') %}
+      <div class="cover-image">
+        <img src="{{ url_for('static', filename=clean_cover) }}"
+             alt="Bild zu {{ ad.titel }}">
+      </div>
+    {% endif %}
+
+    {# Bildergalerie #}
+    {% if images %}
+      <div class="ad-gallery">
+        {% for img in images %}
+          {% set clean_path = img.file_path.replace('static/', '') %}
+          <img src="{{ url_for('static', filename=clean_path) }}"
+               alt="Bild {{ loop.index }} zu {{ ad.titel }}">
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {# Kategorien-Badges der Anzeige #}
+    {% if ad.categories %}
+      <div class="ad-categories">
+        {% for cat in ad.categories %}
+          <span class="badge">
+            <a href="{{ url_for('ads_by_category', category_id=cat.category_id) }}">
+              {{ cat.name }}
+            </a>
+          </span>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <article class="ad-text">
+      <p>{{ ad.text }}</p>
+    </article>
+
+    <p class="ad-meta">
+      Eingestellt am {{ ad.datum }}
+    </p>
+  </main>
+
+</div>
+{% endblock %}
