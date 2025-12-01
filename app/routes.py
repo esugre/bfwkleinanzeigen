@@ -673,7 +673,7 @@ def ad_new():
     conn.close()
 
     # Noch Feedback an den Nutzer und zurück zur Startseite
-    flash("Anzeige erfolgreich erstellt!")
+    flash("Die Anzeige wurde erfolgreich erstellt und muss nun von einem Admin freigegeben werden.")
     return redirect(url_for('index'))
 
 
@@ -741,6 +741,12 @@ def delete_ad(ad_id):
     conn.commit()
     cursor.close()
     conn.close()
+
+    #Alternative Weiterleitung mittels next
+    next_url = request.form.get('next')
+    if next_url:
+        flash("Die Anzeige wurde erfolgreich gelöscht!", "success")
+        return redirect(url_for(next_url))
 
 
     flash("Die Anzeige wurde erfolgreich gelöscht!", "success")
@@ -855,7 +861,6 @@ def ad_edit(ad_id):
     if not titel or not text:
         cursor.close()
         conn.close()
-        flash("Also wenigstens einen Titel und eine Beschreibung dazu bitte!", "error")
         return redirect(url_for('ad_edit', ad_id=ad_id))
     
     # Preis Punkt-Komma-Gestöhne
@@ -1151,7 +1156,7 @@ def admin_approve_ad(ad_id):
     conn.commit()
 
     flash("Anzeige wurde freigeschaltet.", "success")
-    return redirect(url_for('admin_pending_ads'))
+    return redirect(url_for('admin_dashboard'))
 
 
 # ---------------------------

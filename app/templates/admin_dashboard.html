@@ -5,10 +5,10 @@
 
   <div class="stats">
     <p>Aktive Anzeigen: {{ active_count }}</p>
-    <p>Ausstehende Anzeigen: {{ pending_count }}</p>
+    <p>Nicht freigeschaltete Anzeigen: {{ pending_count }}</p>
   </div>
 
-  <h2>Ausstehende Anzeigen</h2>
+  <h2>Noch nicht freigeschaltete Anzeigen</h2>
 
   {% if pending_ads %}
     <table>
@@ -48,6 +48,7 @@
 
               <form action="{{ url_for('delete_ad', ad_id=ad.ad_id) }}"
                     method="post" style="display:inline;">
+                    <input type="hidden" name="next" value='admin_dashboard'>
                 <button type="submit"
                         onclick="return confirm('Anzeige wirklich löschen?');">
                   Löschen
