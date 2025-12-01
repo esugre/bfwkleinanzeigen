@@ -98,8 +98,10 @@ def search():
                 from ads as a
                 join users as u on u.user_id = a.owner_id
                 where
-                    upper(a.titel) like upper(%s)
-                    or upper(a.text) like upper(%s)
+                    a.status = "aktiv"
+                and
+                    (upper(a.titel) like upper(%s)
+                    or upper(a.text) like upper(%s))
                 order by
                     a.datum desc
                    """,
@@ -138,7 +140,7 @@ def search():
 
 
 # ---------------------------
-#   Startseite
+#   Startseite/Index-Site
 # ---------------------------
 @app.route('/') # Alle Anzeigen auf der Startseite
 def index():
@@ -293,6 +295,7 @@ def ads_by_category(category_id):
                    join ads_categories as ac on ac.ad_id = a.ad_id
                    join users as u on u.user_id = a.owner_id
                    where ac.category_id = %s
+                   and a.status = "aktiv"
                    order by a.datum desc
                    """,
                    (category_id,)
@@ -371,6 +374,14 @@ def ad_detail(ad_id):
 
     if ad is None:
         abort(404)
+
+    rolle = session.get('rolle')
+    current_user_id = session.get('user_id')
+
+    if ad['status'] != "aktiv":
+        # Nur Owner oder Admin/Redakteur:in dürfen nicht aktive Anzeigen sehen
+        if current_user_id != ad['owner_id'] and rolle not in ('admin', 'redakteur'):
+            abort(404)
 
     # Jetzt noch die weiteren Pfade zu den Bilder der Anzeige aus der ad_images Tabelle holen
     cursor.execute("""
