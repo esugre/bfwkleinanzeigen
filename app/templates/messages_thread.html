@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h1>Nachrichten zu: {{ ad.titel }}</h1>
+  <p>Chat mit: {{ other_user.vorname }} {{ other_user.nachname }}</p>
+
+  <div class="chat-window">
+    {% if messages %}
+      {% for msg in messages %}
+        <div class="chat-message {% if msg.from_user_id == current_user_id %}from-me{% else %}from-them{% endif %}">
+          <div class="chat-meta">
+            <span class="chat-sender">
+              {% if msg.from_user_id == current_user_id %}
+                Du
+              {% else %}
+                {{ msg.from_vorname }} {{ msg.nachname }}
+              {% endif %}
+            </span>
+            <span class="chat-time">{{ msg.sent_at }}</span>
+          </div>
+          <div class="chat-body">
+            {{ msg.body }}
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p>Noch keine Nachrichten in diesem Dialog.</p>
+    {% endif %}
+  </div>
+
+  <hr>
+
+  <form method="post" class="chat-form">
+    <textarea name="body" rows="3" required placeholder="Deine Nachricht..."></textarea>
+    <button type="submit">Senden</button>
+  </form>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h1>Meine Nachrichten</h1>
+
+  {% if conversations %}
+    <table>
+      <thead>
+        <tr>
+          <th>Anzeige</th>
+          <th>Gegenüber</th>
+          <th>Letzte Nachricht</th>
+          <th>Ungelesen</th>
+          <th>Aktion</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for conv in conversations %}
+          <tr>
+            <td>
+              <a href="{{ url_for('ad_detail', ad_id=conv.ad_id) }}">
+                {{ conv.ad_titel }}
+              </a>
+            </td>
+            <td>{{ conv.other_vorname }} {{ conv.other_nachname }}</td>
+            <td>{{ conv.last_sent_at }}</td>
+            <td>
+              {% if conv.unread_count and conv.unread_count > 0 %}
+                <strong>{{ conv.unread_count }} neu</strong>
+              {% else %}
+                –
+              {% endif %}
+            </td>
+            <td>
+              <a href="{{ url_for('message_thread', ad_id=conv.ad_id, other_user_id=conv.other_user_id) }}">
+                Verlauf ansehen
+              </a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>Du hast noch keine Nachrichten.</p>
+  {% endif %}
+{% endblock %}
