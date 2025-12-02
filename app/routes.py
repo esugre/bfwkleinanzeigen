@@ -116,7 +116,7 @@ def search():
     if ad_ids:
         ids_str = ','.join(str(_id) for _id in ad_ids)
 
-        cursor.execute("""
+        cursor.execute(f"""
                     select
                        ac.ad_id,
                        c.category_id,
