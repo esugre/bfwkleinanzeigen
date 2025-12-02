@@ -477,7 +477,7 @@ def ad_detail(ad_id):
     ad_categories = cursor.fetchall()
 
     # Und noch alle Kategorien, just for the sake of it
-    all_categores = get_all_categories(cursor)
+    all_categories = get_all_categories(cursor)
 
     # Kategorien an das Objekt hängen (nur für bessere Konsistenz der Daten)
     ad['categories'] = ad_categories
@@ -487,7 +487,8 @@ def ad_detail(ad_id):
         'ad_detail.html', 
         ad=ad,
         images = images,
-        categories = all_categores #die "globale" Kategorienliste
+        categories = all_categories, #die "globale" Kategorienliste
+        active_category = None # auf der Detailseite ist keine Kategorie aktiv
         )
 
 
