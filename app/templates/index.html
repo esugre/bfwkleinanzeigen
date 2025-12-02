@@ -3,24 +3,10 @@
 {% block content %}
 <div class="layout-with-sidebar">
 
-  {# --- Sidebar mit Kategorien --- #}
-  <aside class="sidebar">
-    <h3>Kategorien</h3>
-    <ul>
-      <li class="{% if not active_category %}active{% endif %}">
-        <a href="{{ url_for('index') }}">Alle Anzeigen</a>
-      </li>
-      {% for cat in categories %}
-        <li class="{% if active_category and active_category.category_id == cat.category_id %}active{% endif %}">
-          <a href="{{ url_for('ads_by_category', category_id=cat.category_id) }}">
-            {{ cat.name }}
-          </a>
-        </li>
-      {% endfor %}
-    </ul>
-  </aside>
+  {# Sidebar mit Kategorien (Partial) #}
+  {% include "partials/_categories_sidebar.html" %}
 
-  {# --- Hauptbereich mit Anzeigenliste --- #}
+  {# Hauptbereich mit Anzeigen #}
   <main class="ad-list-wrapper">
     <h1>Aktuelle Anzeigen</h1>
 
@@ -30,8 +16,8 @@
       <div class="ad-list">
         {% for ad in ads %}
           <article class="ad-card">
-            {# gesamte Karte klickbar machen, card-link-Klasse kannst du aus Adoptify wiederverwenden #}
-            <a class="card-link" href="{{ url_for('ad_detail', ad_id=ad.ad_id) }}"></a>
+            {# Ganze Karte klickbar machen #}
+            <a class="ad-card-link" href="{{ url_for('ad_detail', ad_id=ad.ad_id) }}"></a>
 
             {% if ad.bilder_path %}
               <img 
@@ -57,7 +43,6 @@
               {{ ad.text[:140] }}{% if ad.text|length > 140 %}…{% endif %}
             </p>
 
-            {# Tags / Kategorien der Anzeige #}
             {% if ad.categories %}
               <div class="ad-tags">
                 {% for cat in ad.categories %}

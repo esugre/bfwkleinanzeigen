@@ -3,24 +3,10 @@
 {% block content %}
 <div class="layout-with-sidebar">
 
-  {# --- Sidebar mit Kategorien --- #}
-  <aside class="sidebar">
-    <h3>Kategorien</h3>
-    <ul>
-      <li class="{% if not active_category %}active{% endif %}">
-        <a href="{{ url_for('index') }}">Alle Anzeigen</a>
-      </li>
-      {% for cat in categories %}
-        <li class="{% if active_category and active_category.category_id == cat.category_id %}active{% endif %}">
-          <a href="{{ url_for('ads_by_category', category_id=cat.category_id) }}">
-            {{ cat.name }}
-          </a>
-        </li>
-      {% endfor %}
-    </ul>
-  </aside>
+  {# Sidebar mit Kategorien (Partial) #}
+  {% include "partials/_categories_sidebar.html" %}
 
-  {# --- Hauptbereich mit gefilterten Anzeigen --- #}
+  {# Hauptbereich mit gefilterten Anzeigen #}
   <main class="ad-list-wrapper">
     <h1>Anzeigen in Kategorie: {{ active_category.name }}</h1>
 
@@ -30,7 +16,7 @@
       <div class="ad-list">
         {% for ad in ads %}
           <article class="ad-card">
-            <a class="card-link" href="{{ url_for('ad_detail', ad_id=ad.ad_id) }}"></a>
+            <a class="ad-card-link" href="{{ url_for('ad_detail', ad_id=ad.ad_id) }}"></a>
 
             {% if ad.bilder_path %}
               <img 
