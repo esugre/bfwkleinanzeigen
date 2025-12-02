@@ -33,6 +33,17 @@
         E-Mail: {{ ad.email }}
       </p>
 
+      {# Block Kontaktaufnahme #}
+      {% if session.get('user_id') and session.get('user_id') != ad.owner_id %}
+        <section class=""ad-contact">
+          <h2>Kontaktiere mich</h2>
+          <form action="{{ url_for('message_thread', ad_id=ad.ad_id, other_user_id=ad.owner_id) }}" method="post">
+            <textarea name="body" rows="3" required placeholder="Ihre Nachricht..."></textarea>
+            <button type="submit">Nachricht senden</button>
+          </form>
+        </section>
+      {% endif %}
+
       {# Coverbild #}
       {% if cover_path %}
         {% set clean_cover = cover_path.replace('static/', '') %}
