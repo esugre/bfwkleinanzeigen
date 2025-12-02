@@ -17,10 +17,14 @@
                     >
                 {% endif %}
 
-                <h2>{{ ad.titel }}</h2>
+                <h2>
+                    <a href="{{ url_for('ad_detail', ad_id=ad.ad_id) }}">
+                        {{ ad.titel }}
+                    </a>
+                </h2>
 
-                {% if ad.preis %}
-                    <p><strong>{{ "%.2f"|format(ad.preis) }} €</strong></p>
+                {% if ad.preis is not none %}
+                    <p><strong>{{ "%.2f"|format(ad.preis|float) }} €</strong></p>
                 {% endif %}
 
                 <p>{{ ad.text[:120] }}{% if ad.text|length > 120 %}...{% endif %}</p>
@@ -29,6 +33,12 @@
                     von {{ ad.vorname }} {{ ad.nachname }}  
                     · {{ ad.datum }}
                 </small>
+
+                <p>
+                    <a href="{{ url_for('ad_detail', ad_id=ad.ad_id) }}">
+                        Details anzeigen
+                    </a>
+                </p>
             </div>
         {% endfor %}
     </div>
