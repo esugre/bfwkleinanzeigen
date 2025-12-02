@@ -254,14 +254,14 @@ display: block;                           /* Entfernt diesen weißen Rand unter 
   flex: 1;
 }
 
-/* Grid mit Karten */
+/* Karten-Liste: wie pet-list, aber für Anzeigen */
 .ad-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 360px));
-  justify-content: center; /* optional für zentrierte Kartenreihen */
-  gap: 1.5rem;
+  display: flex;
+  flex-wrap: wrap;         /* mehrere Zeilen, wenn nötig */
+  justify-content: center; /* zentriert die Karten im verfügbaren Raum */
+  gap: 1.5rem;             /* Abstand zwischen den Karten */
+  padding: 1rem 0;         /* optional: etwas Luft nach oben/unten */
 }
-
 
 /* Karte */
 .ad-card {
@@ -271,6 +271,8 @@ display: block;                           /* Entfernt diesen weißen Rand unter 
   padding: 0.75rem;
   background: #fff;
   overflow: hidden;
+  width: 320px;      /* feste, angenehme Kartenbreite */
+  max-width: 100%;   /* falls Viewport kleiner ist */
 }
 
 /* Ganze Karte klickbar machen */
@@ -290,6 +292,16 @@ display: block;                           /* Entfernt diesen weißen Rand unter 
   position: relative;
   z-index: 2;
 }
+
+.ad-thumb {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
 
 .ad-title {
   font-size: 1rem;
