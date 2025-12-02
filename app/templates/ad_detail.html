@@ -4,84 +4,91 @@
   {# Cover-Pfad einmal zentral setzen #}
   {% set cover_path = ad.bilder_path %}
 
-  <div class="ad-detail-page">
+  <div class="layout-with-sidebar ad-detail-page">
 
-    <aside class="sidebar">
-      <h3>Kategorien</h3>
-      <ul>
-        {% for cat in categories %}
-          <li>
-            <a href="{{ url_for('ads_by_category', category_id=cat.category_id) }}">
-              {{ cat.name }}
-            </a>
-          </li>
-        {% endfor %}
-      </ul>
-    </aside>
+    {# dieselbe Sidebar wie auf Index / Kategorie #}
+    {% include "partials/_categories_sidebar.html" %}
 
     <main class="ad-detail">
-      <h1>{{ ad.titel }}</h1>
 
-      {% if ad.preis is not none %}
-        <p class="price">{{ "%.2f"|format(ad.preis|float) }} €</p>
-      {% else %}
-        <p class="price">Preis: n. V.</p>
-      {% endif %}
+      {# Kopfbereich: Titel, Preis, Anbieter, Kontakt + großes Bild #}
+      <header class="ad-detail-header">
+        <div class="ad-detail-info">
+          <h1 class="ad-detail-title">{{ ad.titel }}</h1>
 
-      <p class="owner">
-        Anbieter: {{ ad.vorname }} {{ ad.nachname }}<br>
-        E-Mail: {{ ad.email }}
-      </p>
+          {% if ad.preis is not none %}
+            <p class="ad-detail-price">{{ "%.2f"|format(ad.preis|float) }} €</p>
+          {% else %}
+            <p class="ad-detail-price">Preis: n. V.</p>
+          {% endif %}
 
-      {# Block Kontaktaufnahme #}
-      {% if session.get('user_id') and session.get('user_id') != ad.owner_id %}
-        <section class=""ad-contact">
-          <h2>Kontaktiere mich</h2>
-          <form action="{{ url_for('message_thread', ad_id=ad.ad_id, other_user_id=ad.owner_id) }}" method="post">
-            <textarea name="body" rows="3" required placeholder="Ihre Nachricht..."></textarea>
-            <button type="submit">Nachricht senden</button>
-          </form>
-        </section>
-      {% endif %}
+          <p class="ad-owner">
+            Anbieter: {{ ad.vorname }} {{ ad.nachname }}<br>
+            E-Mail: {{ ad.email }}
+          </p>
 
-      {# Coverbild #}
-      {% if cover_path %}
-        {% set clean_cover = cover_path.replace('static/', '') %}
-        <div class="cover-image">
-          <img src="{{ url_for('static', filename=clean_cover) }}"
-               alt="Bild zu {{ ad.titel }}">
+          {# Block Kontaktaufnahme (nur wenn eingeloggt und nicht der Owner selbst) #}
+          {% if session.get('user_id') and session.get('user_id') != ad.owner_id %}
+            <section class="ad-contact">
+              <h2>Kontaktiere mich</h2>
+              <form action="{{ url_for('message_thread', ad_id=ad.ad_id, other_user_id=ad.owner_id) }}" method="post">
+                <textarea name="body" rows="3" required placeholder="Ihre Nachricht..."></textarea>
+                <button type="submit">Nachricht senden</button>
+              </form>
+            </section>
+          {% endif %}
         </div>
-      {% endif %}
+
+        {% if cover_path %}
+          {% set clean_cover = cover_path.replace('static/', '') %}
+          <div class="ad-detail-cover">
+            <img 
+              src="{{ url_for('static', filename=clean_cover) }}"
+              alt="Bild zu {{ ad.titel }}"
+              class="ad-detail-cover-img"
+            >
+          </div>
+        {% endif %}
+      </header>
 
       {# Galerie ohne Coverbild #}
       {% if images %}
-        <div class="ad-gallery">
-          {% for img in images %}
-            {% if not cover_path or img.file_path != cover_path %}
-              {% set clean_path = img.file_path.replace('static/', '') %}
-              <img src="{{ url_for('static', filename=clean_path) }}"
-                   alt="Bild {{ loop.index }} zu {{ ad.titel }}">
-            {% endif %}
-          {% endfor %}
-        </div>
+        <section class="ad-detail-gallery">
+          <h2>Weitere Bilder</h2>
+          <div class="ad-gallery-grid">
+            {% for img in images %}
+              {% if not cover_path or img.file_path != cover_path %}
+                {% set clean_path = img.file_path.replace('static/', '') %}
+                <img 
+                  src="{{ url_for('static', filename=clean_path) }}"
+                  alt="Bild {{ loop.index }} zu {{ ad.titel }}"
+                >
+              {% endif %}
+            {% endfor %}
+          </div>
+        </section>
       {% endif %}
 
       {# Kategorien-Badges der Anzeige #}
       {% if ad.categories %}
-        <div class="ad-categories">
-          {% for cat in ad.categories %}
-            <span class="badge">
-              <a href="{{ url_for('ads_by_category', category_id=cat.category_id) }}">
-                {{ cat.name }}
-              </a>
-            </span>
-          {% endfor %}
-        </div>
+        <section class="ad-detail-categories">
+          <h2>Kategorien</h2>
+          <div class="ad-categories">
+            {% for cat in ad.categories %}
+              <span class="badge">
+                <a href="{{ url_for('ads_by_category', category_id=cat.category_id) }}">
+                  {{ cat.name }}
+                </a>
+              </span>
+            {% endfor %}
+          </div>
+        </section>
       {% endif %}
 
-      <article class="ad-text">
+      <section class="ad-text">
+        <h2>Beschreibung</h2>
         <p>{{ ad.text }}</p>
-      </article>
+      </section>
 
       <p class="ad-meta">
         Eingestellt am {{ ad.datum }}
