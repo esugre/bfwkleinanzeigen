@@ -24,6 +24,34 @@ def get_db_connection():
 
 
 # ---------------------------
+#   Unread-Messages // context_processor "again what learned xD"
+# ---------------------------
+@app.context_processor      # Läuft vor jedem Template Render und stellt Variablen global in allen Jinja Templates zur Verfügung, sweet
+def unread_message_count():
+    if 'user_id' not in session:
+        return {}
+    
+    user_id = session['user_id']
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+                        select count(*)
+                       from messages
+                       where to_user_id = %s
+                        and read_at is null
+                       """, (user_id)
+                       )
+        unread = cursor.fetchone()[0] # [0] -> sonst kriegen wir einen Tuple zurück ala "(2,)"
+    
+    except:
+        unread = 0
+
+    return {'unread_messages_count': unread}
+
+
+# ---------------------------
 #   Category-Helper-Function
 # ---------------------------
 def get_all_categories(cursor):
