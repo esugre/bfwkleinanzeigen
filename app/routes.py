@@ -919,7 +919,7 @@ def ad_edit(ad_id):
     titel = request.form.get('titel')
     text = request.form.get('text')
     preis_raw = request.form.get('preis')
-    status = request.form.get('status')
+    status_form = request.form.get('status')
     category_ids_raw = request.form.getlist('categories')
 
     if not titel or not text:
@@ -938,8 +938,20 @@ def ad_edit(ad_id):
             flash("Was auch immer du da eingegeben hast, eine Zahl ist das nicht!", "error")
             return redirect(url_for('ad_edit', ad_id=ad_id))
     
-    if not status:
-        status = ad['status']
+    # Status nur ändern wenn Admin/Redakteur
+    old_status = ad['status'] # aus dem select von weiter oben
+    rolle = session.get('rolle') 
+
+    if rolle in ('admin', 'redakteur'):
+        status = status_form or old_status
+    else:
+        # normale user dürfen eine pending ad nicht auf aktiv setzen
+        if old_status == 'pending':
+            status = 'pending'
+        else:
+            # anzeige bereits freigeschaltet oder in anderem status 
+            # user darf dann wählen 
+            status = status_form or old_status
 
     # Als nächstes updaten wir jetzt diese ganzen Infos aus dem Formular (except le pictures)
     cursor.execute("""
