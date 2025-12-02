@@ -23,7 +23,8 @@
 
           {% if 'user_id' in session %}
             <span class="slogan">
-              Willkommen zurück, {{ session.vorname }} {{ session.nachname }}!
+              Willkommen zurück, 
+              {{ session.vorname }} {{ session.nachname }}!
             </span>
           {% else %}
             <span class="slogan">Finde oder veröffentliche lokale Kleinanzeigen.</span>
@@ -35,6 +36,15 @@
             <li><a href="{{ url_for('index') }}">Startseite</a></li>
             <li><a href="{{ url_for('ad_new') }}">Neue Anzeige</a></li>
             <li><a href="{{ url_for('my_ads') }}">Meine Anzeigen</a></li>
+
+            {# Nachrichten-Inbox #}
+            <li><a href="{{ url_for('messages_inbox') }}">Nachrichten</a></li>
+
+            {# Admin-Dashboard, sofern die Rechte vorhanden #}
+            {% if session.get('rolle') in ['admin', 'redakteur'] %}
+              <li><a href="{{ url_for('admin_dashboard') }}">Admin-Dashboard</a></li>
+            {% endif %}
+
             <li><a href="{{ url_for('logout') }}">Abmelden</a></li>
           {% else %}
             <li><a href="{{ url_for('login') }}">Login</a></li>
