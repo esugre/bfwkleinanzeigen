@@ -1,46 +1,83 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>Aktuelle Anzeigen</h1>
+<div class="layout-with-sidebar">
 
-{% if ads|length == 0 %}
-    <p>Es wurden noch keine Anzeigen erstellt.</p>
-{% else %}
-    <div class="ad-list">
+  {# --- Sidebar mit Kategorien --- #}
+  <aside class="sidebar">
+    <h3>Kategorien</h3>
+    <ul>
+      <li class="{% if not active_category %}active{% endif %}">
+        <a href="{{ url_for('index') }}">Alle Anzeigen</a>
+      </li>
+      {% for cat in categories %}
+        <li class="{% if active_category and active_category.category_id == cat.category_id %}active{% endif %}">
+          <a href="{{ url_for('ads_by_category', category_id=cat.category_id) }}">
+            {{ cat.name }}
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  </aside>
+
+  {# --- Hauptbereich mit Anzeigenliste --- #}
+  <main class="ad-list-wrapper">
+    <h1>Aktuelle Anzeigen</h1>
+
+    {% if ads|length == 0 %}
+      <p>Es wurden noch keine Anzeigen erstellt.</p>
+    {% else %}
+      <div class="ad-list">
         {% for ad in ads %}
-            <div class="ad-card">
-                {% if ad.bilder_path %}
-                    <img 
-                        src="/{{ ad.bilder_path }}" 
-                        alt="{{ ad.titel }}" 
-                        style="width:200px; height:auto; display:block; margin-bottom:10px;"
-                    >
-                {% endif %}
+          <article class="ad-card">
+            {# gesamte Karte klickbar machen, card-link-Klasse kannst du aus Adoptify wiederverwenden #}
+            <a class="card-link" href="{{ url_for('ad_detail', ad_id=ad.ad_id) }}"></a>
 
-                <h2>
-                    <a href="{{ url_for('ad_detail', ad_id=ad.ad_id) }}">
-                        {{ ad.titel }}
+            {% if ad.bilder_path %}
+              <img 
+                src="/{{ ad.bilder_path }}" 
+                alt="{{ ad.titel }}" 
+                class="ad-image"
+              >
+            {% endif %}
+
+            <h2 class="ad-title">
+              <a href="{{ url_for('ad_detail', ad_id=ad.ad_id) }}">
+                {{ ad.titel }}
+              </a>
+            </h2>
+
+            {% if ad.preis is not none %}
+              <p class="ad-price"><strong>{{ "%.2f"|format(ad.preis|float) }} €</strong></p>
+            {% else %}
+              <p class="ad-price">Preis: n. V.</p>
+            {% endif %}
+
+            <p class="ad-excerpt">
+              {{ ad.text[:140] }}{% if ad.text|length > 140 %}…{% endif %}
+            </p>
+
+            {# Tags / Kategorien der Anzeige #}
+            {% if ad.categories %}
+              <div class="ad-tags">
+                {% for cat in ad.categories %}
+                  <span class="ad-tag">
+                    <a href="{{ url_for('ads_by_category', category_id=cat.category_id) }}">
+                      {{ cat.name }}
                     </a>
-                </h2>
+                  </span>
+                {% endfor %}
+              </div>
+            {% endif %}
 
-                {% if ad.preis is not none %}
-                    <p><strong>{{ "%.2f"|format(ad.preis|float) }} €</strong></p>
-                {% endif %}
-
-                <p>{{ ad.text[:120] }}{% if ad.text|length > 120 %}...{% endif %}</p>
-
-                <small>
-                    von {{ ad.vorname }} {{ ad.nachname }}  
-                    · {{ ad.datum }}
-                </small>
-
-                <p>
-                    <a href="{{ url_for('ad_detail', ad_id=ad.ad_id) }}">
-                        Details anzeigen
-                    </a>
-                </p>
-            </div>
+            <p class="ad-meta">
+              von {{ ad.vorname }} {{ ad.nachname }} · {{ ad.datum }}
+            </p>
+          </article>
         {% endfor %}
-    </div>
-{% endif %}
+      </div>
+    {% endif %}
+  </main>
+
+</div>
 {% endblock %}
