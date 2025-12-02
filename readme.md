@@ -56,6 +56,10 @@ Zusätzlich noch die Kategorien importieren:
 ```bash
 sudo mariadb -u username -p bfwkleinanzeigen < sql/categories.sql
 ```
+Eine Erweiterung noch holen:
+```bash
+sudo mariadb -u username -p bfwkleinanzeigen < sql/messages.sql
+```
 
 ### Unter Windows mit XAMPP
 
