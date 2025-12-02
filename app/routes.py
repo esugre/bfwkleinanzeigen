@@ -41,7 +41,7 @@ def unread_message_count():
                        from messages
                        where to_user_id = %s
                         and read_at is null
-                       """, (user_id)
+                       """, (user_id,) # -> Mit Komma (,) übergeben wir ein Tuple, ansonsten wäre es nur ein einzelnen Wert, -> nicht iterable -> Error, da wir eine Liste von Werten in einer Sequenz brauchen, auch wenn es nur ein Wert ist. 
                        )
         unread = cursor.fetchone()[0] # [0] -> sonst kriegen wir einen Tuple zurück ala "(2,)"
     
