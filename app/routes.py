@@ -52,6 +52,37 @@ def unread_message_count():
 
 
 # ---------------------------
+#   Pending-Ads Counter für Admin/Redakteur
+# ---------------------------
+@app.context_processor
+def pending_ads_count():
+    """
+    Stellt pending_ads_count in allen Templates zur Verfügung.
+    ABER nur für Admins und Redakteure.
+    """
+
+    rolle = session.get('rolle')
+
+    # Check ob Admin/Redakteur
+    if rolle not in ('admin', 'redakteur'):
+        return {}
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+                        select count(*)
+                       from ads
+                       where status = "pending"
+                       """)
+        pending = cursor.fetchone()[0]
+    except:
+        pending = 0
+
+    return {'pending_ads_count': pending}
+
+
+# ---------------------------
 #   Category-Helper-Function
 # ---------------------------
 def get_all_categories(cursor):
@@ -236,7 +267,12 @@ def index():
     cursor.close()
     conn.close()
 
-    return render_template('index.html', ads=ads, categories=all_categories)  # Übergabe an die Front, do whatever you want wif it! ;)
+    return render_template(
+        'index.html',
+        ads=ads,
+        categories=all_categories, # für die Sidebar/Navi
+        active_category=None # auf der Startseite ist ja keine Kategorie von Haus aus aktiv
+    )
 
 
 # ---------------------------
