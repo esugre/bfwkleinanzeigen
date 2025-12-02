@@ -204,3 +204,143 @@ display: block;                           /* Entfernt diesen weißen Rand unter 
   align-items: center;
   justify-content: center;
 }
+
+/*################### NEUES CSS, drüber legacy-code ########################*/
+
+/* Layout mit Sidebar für Index & Kategorie-Seiten */
+.layout-with-sidebar {
+  display: flex;
+  align-items: flex-start;
+  gap: 2rem;
+  margin-top: 2rem;
+  padding: 0 2rem;
+}
+
+/* Sidebar für Kategorien */
+.sidebar {
+  flex: 0 0 220px;
+  border-right: 1px solid #ddd;
+  padding-right: 1.5rem;
+}
+
+.sidebar h3 {
+  font-size: 1.1rem;
+  margin-bottom: 0.75rem;
+}
+
+.sidebar ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sidebar li {
+  margin-bottom: 0.35rem;
+}
+
+.sidebar a {
+  text-decoration: none;
+  color: #444;
+  font-size: 0.95rem;
+}
+
+.sidebar li.active > a {
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+/* Anzeigenbereich */
+.ad-list-wrapper {
+  flex: 1;
+}
+
+/* Grid mit Karten */
+.ad-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 360px));
+  justify-content: center; /* optional für zentrierte Kartenreihen */
+  gap: 1.5rem;
+}
+
+
+/* Karte */
+.ad-card {
+  position: relative;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 0.75rem;
+  background: #fff;
+  overflow: hidden;
+}
+
+/* Ganze Karte klickbar machen */
+.ad-card-link {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+/* Bild in der Karte */
+.ad-image {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+  position: relative;
+  z-index: 2;
+}
+
+.ad-title {
+  font-size: 1rem;
+  margin: 0.25rem 0;
+  position: relative;
+  z-index: 2;
+}
+
+.ad-title a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.ad-price {
+  font-weight: 600;
+  margin: 0.25rem 0;
+  position: relative;
+  z-index: 2;
+}
+
+.ad-excerpt {
+  font-size: 0.9rem;
+  color: #555;
+  margin: 0.4rem 0 0.6rem;
+  position: relative;
+  z-index: 2;
+}
+
+/* Tags */
+.ad-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-bottom: 0.4rem;
+  position: relative;
+  z-index: 2;
+}
+
+.ad-tag a {
+  display: inline-block;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  border: 1px solid #ddd;
+  font-size: 0.75rem;
+  text-decoration: none;
+  color: #666;
+}
+
+.ad-meta {
+  font-size: 0.8rem;
+  color: #777;
+  position: relative;
+  z-index: 2;
+}
