@@ -1176,3 +1176,170 @@ def secret():
     return "Nur für Eingeloggte"
 
 
+# ------------------------------------------------------ #
+#                       Messaging
+# ------------------------------------------------------ #
+
+
+# ---------------------------
+#   Thread-Route (Chat-Verlauf & Antworten)
+# ---------------------------
+@app.route('/messages/thread/<int:ad_id>/<int:other_user_id>', methods=['GET', 'POST'])
+@login_required
+def message_thread(ad_id, other_user_id):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    current_user_id = session.get('user_id')
+
+    # Anzeige holen (für Titel, Owner, usw.)
+    cursor.execute("""
+                    select ad_id, owner_id, titel
+                   from ads
+                   where ad_id = %s
+                   """,
+                   (ad_id,)
+                   )
+    ad = cursor.fetchone()
+
+    if not ad:
+        abort(404)
+
+    # Das "Gegenüber" holen
+    cursor.execute("""
+                    select user_id, vorname, nachname, email
+                   from users
+                   where user_id = %s
+                   """, (other_user_id,)
+                   )
+    other_user = cursor.fetchone()
+
+    if not other_user:
+        abort(404)
+
+    # current_user sicher parken
+    if current_user_id == other_user['user_id']:
+        flash("Ich glaube nicht das du dir selbst eine Nachricht schicken wolltest.")
+        return redirect(url_for('ad_detail', ad_id=ad_id))
+
+    # Post-Part -> neue Nachricht senden
+    if request.method == 'POST':
+        body = request.form.get('body', '').strip()
+        if not body:
+            flash("Willst du wirklich eine leere Nachricht verschicken?", "error")
+            return redirect(url_for('message_thread', ad_id = ad_id, other_user_id=other_user_id))
+        
+        subject = f"Nachricht zu: {ad['titel']}"
+
+        c2 = conn.cursor()
+        c2.execute("""
+                    insert into messages (ad_id, from_user_id, to_user_id, subject, body)
+                   values (%s, %s, %s, %s, %s)
+                   """,
+                   (ad_id, current_user_id, other_user['user_id'], subject, body)
+                   )
+        conn.commit()
+
+        flash("Nachricht wurder verschickt.", "success")
+        return redirect(url_for('message_thread', ad_id=ad_id, other_user_id=other_user_id))
+    
+    # Chatverlauf laden (egal von welcher Seite aus)
+    cursor.execute("""
+                    select
+                   m.message_id,
+                   m.from_user_id,
+                   m.to_user_id,
+                   m.body,
+                   m.sent_at,
+                   m.read_at,
+                   fu.vorname as from_vorname,
+                   fu.nachname as from_nachname
+                   from messages m
+                   join users fu on fu.user_id = m.from_user_id
+                   where m.ad_id = %s
+                    and (
+                        (m.from_user_id = %s and m.to_user_id = %s)
+                        or
+                        (m.from_user_id = %s and m.to_user_id = %s)
+                        )
+                   order by m.sent_at asc
+                   """,
+                   (ad_id, current_user_id, other_user_id, other_user_id, current_user_id)
+                   )
+    messages = cursor.fetchall()
+
+    # Ungelesene Nachrichten als gelesen markieren
+    cursor.execute("""
+                    update messages
+                   set read_at = CURRENT_TIMESTAMP
+                   where ad_id = %s
+                    and to_user_id = %s
+                    and read_at is null
+                   """,
+                   (ad_id, current_user_id)
+                   )
+    conn.commit()
+    conn.close()
+
+    return render_template(
+        'messages_thread.html',
+        ad=ad,
+        other_user=other_user,
+        messages=messages,
+        current_user_id=current_user_id
+    )
+
+    # Das sollte eigentlich (hoffe ich, glaube ich, i don't know for sure) alles an Chat für 1 Anzeige, zwischen 2 Usern abdecken
+
+    
+# ---------------------------
+#   Inbox-Route 
+# ---------------------------
+@app.route('/messages')
+@login_required
+def messages_inbox():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    user_id = session.get('user_id')
+
+    cursor.execute("""
+                    select m.ad_id,
+                   a.titel as ad_titel,
+
+                   case
+                    when m.from_user_id = %s then m.to_user_id
+                    else m.from_user_id
+                   end as other_user_id,
+
+                   u.vorname as other_vorname,
+                   u.nachname as other_nachname,
+
+                   max(m.sent_at) as last_sent_at,
+
+                   sum(
+                    case
+                        when m.to_user_id = %s
+                        and m.read_at is null then 1
+                        else 0
+                    end
+                   ) as unread_count
+
+                   from messages m
+                   join ads a on a.ad_id = m.ad_id
+                   join users u on u.user_id = (
+                    case
+                        when m.from_user_id = %s then m.to_user_id
+                        else m.from_user_id 
+                    end
+                   )
+
+                   where m.from_user_id = %s or m.to_user_id = %s
+                   group by m.ad_id, other_user_id
+                   order by last_sent_at desc
+                    """,
+                    (user_id, user_id, user_id, user_id, user_id)
+                    )
+    conversations = cursor.fetchall()
+
+    return render_template('messages_inbox.html', conversations=conversations)
