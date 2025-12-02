@@ -37,8 +37,15 @@
             <li><a href="{{ url_for('ad_new') }}">Neue Anzeige</a></li>
             <li><a href="{{ url_for('my_ads') }}">Meine Anzeigen</a></li>
 
-            {# Nachrichten-Inbox #}
-            <li><a href="{{ url_for('messages_inbox') }}">Nachrichten</a></li>
+            {# Nachrichten-Inbox mit unread-messages Counter über context processor #}
+            <li>
+              <a href="{{ url_for('messages_inbox') }}">
+                Nachrichten
+                {% if unread_messages_count and unread_messages_count > 0 %}
+                ({{ unread_messages_count }})
+                {% endif %}
+              </a>
+            </li>
 
             {# Admin-Dashboard, sofern die Rechte vorhanden #}
             {% if session.get('rolle') in ['admin', 'redakteur'] %}
