@@ -53,7 +53,7 @@ ALTER TABLE `ads`
   ADD FOREIGN KEY (`owner_id`)
   REFERENCES `users` (`user_id`);
 
--- Beziehung: Zuordnung Anzeige ↔ Kategorie
+-- Beziehung: Zuordnung Anzeige <-> Kategorie
 -- Wenn eine Anzeige gelöscht wird, sollen auch ihre Kategoriezurodnungen verschwinden.
 ALTER TABLE `ads_categories`
   ADD FOREIGN KEY (`ad_id`)
@@ -74,7 +74,7 @@ ALTER TABLE `messages`
   REFERENCES `users` (`user_id`);
 
 -- Beziehung: Bilder zu Anzeigen
--- Wenn eine Anzeige gelöscht wird, sollen auch alle Bilddatensätze verschwinden.
+-- Wenn eine Anzeige gelöscht wird, sollen auch alle Bildpfade/Datensätze verschwinden.
 ALTER TABLE `ad_images`
   ADD FOREIGN KEY (`ad_id`)
   REFERENCES `ads` (`ad_id`)

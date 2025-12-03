@@ -83,7 +83,7 @@
         {% for image in images %}
           <div class="image-item">
             {# 
-              file_path ist bei dir z.B. "static/uploads/xyz.jpg".
+              file_path ist z.B. "static/uploads/xyz.jpg".
               / davor ergibt dann "/static/uploads/xyz.jpg" 
             #}
             <img src="/{{ image.file_path }}" alt="Bild {{ loop.index }}" class="thumb">

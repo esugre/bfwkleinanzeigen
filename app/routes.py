@@ -168,7 +168,7 @@ def search():
                    )
     ads = cursor.fetchall()
 
-    # Profilaktisch Kategorien pro Anzeige mitgeben, sollte mir langsam eine Funktion dafür schreiben...
+    # Prophylaktisch Kategorien pro Anzeige mitgeben, sollte mir langsam eine Funktion dafür schreiben...
     ad_ids = [ad['ad_id'] for ad in ads]
     ad_categories_map = {}
 
