@@ -204,3 +204,294 @@ display: block;                           /* Entfernt diesen weißen Rand unter 
   align-items: center;
   justify-content: center;
 }
+
+/*################### NEUES CSS, drüber legacy-code ########################*/
+
+/* Layout mit Sidebar für Index & Kategorie-Seiten */
+.layout-with-sidebar {
+  display: flex;
+  align-items: flex-start;
+  gap: 2rem;
+  margin-top: 2rem;
+  padding: 0 2rem;
+}
+
+/* Sidebar für Kategorien */
+.sidebar {
+  flex: 0 0 220px;
+  border-right: 1px solid #ddd;
+  padding-right: 1.5rem;
+}
+
+.sidebar h3 {
+  font-size: 1.1rem;
+  margin-bottom: 0.75rem;
+}
+
+.sidebar ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sidebar li {
+  margin-bottom: 0.35rem;
+}
+
+.sidebar a {
+  text-decoration: none;
+  color: #444;
+  font-size: 0.95rem;
+}
+
+.sidebar li.active > a {
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+/* Anzeigenbereich */
+.ad-list-wrapper {
+  flex: 1;
+}
+
+/* Karten-Liste: wie pet-list, aber für Anzeigen */
+.ad-list {
+  display: flex;
+  flex-wrap: wrap;         /* mehrere Zeilen, wenn nötig */
+  justify-content: center; /* zentriert die Karten im verfügbaren Raum */
+  gap: 1.5rem;             /* Abstand zwischen den Karten */
+  padding: 1rem 0;         /* optional: etwas Luft nach oben/unten */
+}
+
+/* Karte */
+.ad-card {
+  position: relative;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 0.75rem;
+  background: #fff;
+  overflow: hidden;
+  width: 320px;      /* feste, angenehme Kartenbreite */
+  max-width: 100%;   /* falls Viewport kleiner ist */
+}
+
+/* Ganze Karte klickbar machen */
+.ad-card-link {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+/* Bild in der Karte */
+.ad-image {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+  position: relative;
+  z-index: 2;
+}
+
+.ad-thumb {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+
+.ad-title {
+  font-size: 1rem;
+  margin: 0.25rem 0;
+  position: relative;
+  z-index: 2;
+}
+
+.ad-title a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.ad-price {
+  font-weight: 600;
+  margin: 0.25rem 0;
+  position: relative;
+  z-index: 2;
+}
+
+.ad-excerpt {
+  font-size: 0.9rem;
+  color: #555;
+  margin: 0.4rem 0 0.6rem;
+  position: relative;
+  z-index: 2;
+}
+
+/* Tags */
+.ad-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-bottom: 0.4rem;
+  position: relative;
+  z-index: 2;
+}
+
+.ad-tag a {
+  display: inline-block;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  border: 1px solid #ddd;
+  font-size: 0.75rem;
+  text-decoration: none;
+  color: #666;
+}
+
+.ad-meta {
+  font-size: 0.8rem;
+  color: #777;
+  position: relative;
+  z-index: 2;
+}
+
+
+/* Detailseite Layout */
+.ad-detail-page {
+  margin-top: 2rem;
+}
+
+/* Hauptbereich der Detailseite nutzt dieselbe Sidebar-Struktur über .layout-with-sidebar */
+
+/* Kopfbereich: Text links, Coverbild rechts */
+.ad-detail-header {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+}
+
+.ad-detail-info {
+  flex: 2;
+}
+
+.ad-detail-cover {
+  flex: 1.5;
+  max-width: 420px;
+}
+
+.ad-detail-cover-img {
+  width: 100%;
+  max-height: 320px;
+  object-fit: cover;
+  border-radius: 8px;
+  display: block;
+}
+
+/* Titel, Preis, Anbieter */
+.ad-detail-title {
+  font-size: 1.6rem;
+  margin: 0 0 0.5rem;
+}
+
+.ad-detail-price {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+}
+
+.ad-owner {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 1rem;
+}
+
+/* Kontaktformular */
+.ad-contact {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 0.75rem;
+  background: #fafafa;
+  margin-top: 0.5rem;
+}
+
+.ad-contact h2 {
+  font-size: 1rem;
+  margin-top: 0;
+}
+
+.ad-contact textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 80px;
+  margin-bottom: 0.5rem;
+}
+
+.ad-contact button {
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+}
+
+/* Galerie */
+.ad-detail-gallery {
+  margin-bottom: 1.5rem;
+}
+
+.ad-detail-gallery h2 {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.ad-gallery-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.ad-gallery-grid img {
+  width: 120px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+/* Kategorien-Badges */
+.ad-detail-categories {
+  margin-bottom: 1.5rem;
+}
+
+.ad-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.badge a {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid #ddd;
+  font-size: 0.8rem;
+  text-decoration: none;
+  color: #555;
+}
+
+/* Beschreibung + Meta */
+.ad-text {
+  margin-bottom: 1rem;
+}
+
+.ad-text h2 {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.ad-meta {
+  font-size: 0.8rem;
+  color: #777;
+}
+

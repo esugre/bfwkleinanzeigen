@@ -1,36 +1,68 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>Aktuelle Anzeigen</h1>
+<div class="layout-with-sidebar">
 
-{% if ads|length == 0 %}
-    <p>Es wurden noch keine Anzeigen erstellt.</p>
-{% else %}
-    <div class="ad-list">
+  {# Sidebar mit Kategorien (Partial) #}
+  {% include "partials/_categories_sidebar.html" %}
+
+  {# Hauptbereich mit Anzeigen #}
+  <main class="ad-list-wrapper">
+    <h1>Aktuelle Anzeigen</h1>
+
+    {% if ads|length == 0 %}
+      <p>Es wurden noch keine Anzeigen erstellt.</p>
+    {% else %}
+      <div class="ad-list">
         {% for ad in ads %}
-            <div class="ad-card">
-                {% if ad.bilder_path %}
-                    <img 
-                        src="/{{ ad.bilder_path }}" 
-                        alt="{{ ad.titel }}" 
-                        style="width:200px; height:auto; display:block; margin-bottom:10px;"
-                    >
-                {% endif %}
+          <article class="ad-card">
+            {# Ganze Karte klickbar machen #}
+            <a class="ad-card-link" href="{{ url_for('ad_detail', ad_id=ad.ad_id) }}"></a>
 
-                <h2>{{ ad.titel }}</h2>
+            {% if ad.bilder_path %}
+              <img 
+                src="/{{ ad.bilder_path }}" 
+                alt="{{ ad.titel }}" 
+                class="ad-image"
+              >
+            {% endif %}
 
-                {% if ad.preis %}
-                    <p><strong>{{ "%.2f"|format(ad.preis) }} €</strong></p>
-                {% endif %}
+            <h2 class="ad-title">
+              <a href="{{ url_for('ad_detail', ad_id=ad.ad_id) }}">
+                {{ ad.titel }}
+              </a>
+            </h2>
 
-                <p>{{ ad.text[:120] }}{% if ad.text|length > 120 %}...{% endif %}</p>
+            {% if ad.preis is not none %}
+              <p class="ad-price"><strong>{{ "%.2f"|format(ad.preis|float) }} €</strong></p>
+            {% else %}
+              <p class="ad-price">Preis: n. V.</p>
+            {% endif %}
 
-                <small>
-                    von {{ ad.vorname }} {{ ad.nachname }}  
-                    · {{ ad.datum }}
-                </small>
-            </div>
+            <p class="ad-excerpt">
+              {{ ad.text[:140] }}{% if ad.text|length > 140 %}…{% endif %}
+            </p>
+
+            {% if ad.categories %}
+              <div class="ad-tags">
+                {% for cat in ad.categories %}
+                  <span class="ad-tag">
+                    <a href="{{ url_for('ads_by_category', category_id=cat.category_id) }}">
+                      {{ cat.name }}
+                    </a>
+                  </span>
+                {% endfor %}
+              </div>
+            {% endif %}
+
+            <p class="ad-meta">
+              von {{ ad.vorname }} {{ ad.nachname }} · {{ ad.datum }}
+            </p>
+          </article>
         {% endfor %}
-    </div>
-{% endif %}
+      </div>
+    {% endif %}
+  </main>
+
+</div>
 {% endblock %}

@@ -37,12 +37,20 @@
 
     <div class="form-row">
       <label for="status">Status</label>
+
+      {# Admin/redakteur -> immer dropdown Auswahl
+      regular user NUR, wenn die Anzeige nicht mehr pending ist #}
+      {% if rolle in ['admin', 'redakteur'] or ad.status != 'pending' %}
       <select id="status" name="status">
         <option value="aktiv"      {{ "selected" if ad.status == "aktiv" }}>Aktiv</option>
         <option value="reserviert" {{ "selected" if ad.status == "reserviert" }}>Reserviert</option>
         <option value="verkauft"   {{ "selected" if ad.status == "verkauft" }}>Verkauft</option>
         <option value="archiviert" {{ "selected" if ad.status == "archiviert" }}>Archiviert</option>
       </select>
+      {% else %}
+      {# normaler user + pending -> status nur anzeigen, aber nicht ändern#}
+      <p>{{ ad.status|capitalize }}</p>
+      {% endif %}
     </div>
   </fieldset>
 

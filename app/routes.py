@@ -24,6 +24,65 @@ def get_db_connection():
 
 
 # ---------------------------
+#   Unread-Messages // context_processor "again what learned xD"
+# ---------------------------
+@app.context_processor      # Läuft vor jedem Template Render und stellt Variablen global in allen Jinja Templates zur Verfügung, sweet
+def unread_message_count():
+    if 'user_id' not in session:
+        return {}
+    
+    user_id = session['user_id']
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+                        select count(*)
+                       from messages
+                       where to_user_id = %s
+                        and read_at is null
+                       """, (user_id,) # -> Mit Komma (,) übergeben wir ein Tuple, ansonsten wäre es nur ein einzelnen Wert, -> nicht iterable -> Error, da wir eine Liste von Werten in einer Sequenz brauchen, auch wenn es nur ein Wert ist. 
+                       )
+        unread = cursor.fetchone()[0] # [0] -> sonst kriegen wir einen Tuple zurück ala "(2,)"
+    
+    except:
+        unread = 0
+
+    return {'unread_messages_count': unread}
+
+
+# ---------------------------
+#   Pending-Ads Counter für Admin/Redakteur
+# ---------------------------
+@app.context_processor
+def pending_ads_count():
+    """
+    Stellt pending_ads_count in allen Templates zur Verfügung.
+    ABER nur für Admins und Redakteure.
+    """
+
+    rolle = session.get('rolle')
+
+    # Check ob Admin/Redakteur
+    if rolle not in ('admin', 'redakteur'):
+        return {}
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+                        select count(*)
+                       from ads
+                       where status = "pending"
+                       """)
+        pending = cursor.fetchone()[0]
+    except:
+        pending = 0
+
+    return {'pending_ads_count': pending}
+
+
+# ---------------------------
 #   Category-Helper-Function
 # ---------------------------
 def get_all_categories(cursor):
@@ -116,7 +175,7 @@ def search():
     if ad_ids:
         ids_str = ','.join(str(_id) for _id in ad_ids)
 
-        cursor.execute("""
+        cursor.execute(f"""
                     select
                        ac.ad_id,
                        c.category_id,
@@ -208,7 +267,12 @@ def index():
     cursor.close()
     conn.close()
 
-    return render_template('index.html', ads=ads, categories=all_categories)  # Übergabe an die Front, do whatever you want wif it! ;)
+    return render_template(
+        'index.html',
+        ads=ads,
+        categories=all_categories, # für die Sidebar/Navi
+        active_category=None # auf der Startseite ist ja keine Kategorie von Haus aus aktiv
+    )
 
 
 # ---------------------------
@@ -413,7 +477,7 @@ def ad_detail(ad_id):
     ad_categories = cursor.fetchall()
 
     # Und noch alle Kategorien, just for the sake of it
-    all_categores = get_all_categories(cursor)
+    all_categories = get_all_categories(cursor)
 
     # Kategorien an das Objekt hängen (nur für bessere Konsistenz der Daten)
     ad['categories'] = ad_categories
@@ -423,7 +487,8 @@ def ad_detail(ad_id):
         'ad_detail.html', 
         ad=ad,
         images = images,
-        categories = all_categores #die "globale" Kategorienliste
+        categories = all_categories, #die "globale" Kategorienliste
+        active_category = None # auf der Detailseite ist keine Kategorie aktiv
         )
 
 
@@ -855,7 +920,7 @@ def ad_edit(ad_id):
     titel = request.form.get('titel')
     text = request.form.get('text')
     preis_raw = request.form.get('preis')
-    status = request.form.get('status')
+    status_form = request.form.get('status')
     category_ids_raw = request.form.getlist('categories')
 
     if not titel or not text:
@@ -874,8 +939,20 @@ def ad_edit(ad_id):
             flash("Was auch immer du da eingegeben hast, eine Zahl ist das nicht!", "error")
             return redirect(url_for('ad_edit', ad_id=ad_id))
     
-    if not status:
-        status = ad['status']
+    # Status nur ändern wenn Admin/Redakteur
+    old_status = ad['status'] # aus dem select von weiter oben
+    rolle = session.get('rolle') 
+
+    if rolle in ('admin', 'redakteur'):
+        status = status_form or old_status
+    else:
+        # normale user dürfen eine pending ad nicht auf aktiv setzen
+        if old_status == 'pending':
+            status = 'pending'
+        else:
+            # anzeige bereits freigeschaltet oder in anderem status 
+            # user darf dann wählen 
+            status = status_form or old_status
 
     # Als nächstes updaten wir jetzt diese ganzen Infos aus dem Formular (except le pictures)
     cursor.execute("""
@@ -1176,3 +1253,170 @@ def secret():
     return "Nur für Eingeloggte"
 
 
+# ------------------------------------------------------ #
+#                       Messaging
+# ------------------------------------------------------ #
+
+
+# ---------------------------
+#   Thread-Route (Chat-Verlauf & Antworten)
+# ---------------------------
+@app.route('/messages/thread/<int:ad_id>/<int:other_user_id>', methods=['GET', 'POST'])
+@login_required
+def message_thread(ad_id, other_user_id):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    current_user_id = session.get('user_id')
+
+    # Anzeige holen (für Titel, Owner, usw.)
+    cursor.execute("""
+                    select ad_id, owner_id, titel
+                   from ads
+                   where ad_id = %s
+                   """,
+                   (ad_id,)
+                   )
+    ad = cursor.fetchone()
+
+    if not ad:
+        abort(404)
+
+    # Das "Gegenüber" holen
+    cursor.execute("""
+                    select user_id, vorname, nachname, email
+                   from users
+                   where user_id = %s
+                   """, (other_user_id,)
+                   )
+    other_user = cursor.fetchone()
+
+    if not other_user:
+        abort(404)
+
+    # current_user sicher parken
+    if current_user_id == other_user['user_id']:
+        flash("Ich glaube nicht das du dir selbst eine Nachricht schicken wolltest.")
+        return redirect(url_for('ad_detail', ad_id=ad_id))
+
+    # Post-Part -> neue Nachricht senden
+    if request.method == 'POST':
+        body = request.form.get('body', '').strip()
+        if not body:
+            flash("Willst du wirklich eine leere Nachricht verschicken?", "error")
+            return redirect(url_for('message_thread', ad_id = ad_id, other_user_id=other_user_id))
+        
+        subject = f"Nachricht zu: {ad['titel']}"
+
+        c2 = conn.cursor()
+        c2.execute("""
+                    insert into messages (ad_id, from_user_id, to_user_id, subject, body)
+                   values (%s, %s, %s, %s, %s)
+                   """,
+                   (ad_id, current_user_id, other_user['user_id'], subject, body)
+                   )
+        conn.commit()
+
+        flash("Nachricht wurder verschickt.", "success")
+        return redirect(url_for('message_thread', ad_id=ad_id, other_user_id=other_user_id))
+    
+    # Chatverlauf laden (egal von welcher Seite aus)
+    cursor.execute("""
+                    select
+                   m.message_id,
+                   m.from_user_id,
+                   m.to_user_id,
+                   m.body,
+                   m.sent_at,
+                   m.read_at,
+                   fu.vorname as from_vorname,
+                   fu.nachname as from_nachname
+                   from messages m
+                   join users fu on fu.user_id = m.from_user_id
+                   where m.ad_id = %s
+                    and (
+                        (m.from_user_id = %s and m.to_user_id = %s)
+                        or
+                        (m.from_user_id = %s and m.to_user_id = %s)
+                        )
+                   order by m.sent_at asc
+                   """,
+                   (ad_id, current_user_id, other_user_id, other_user_id, current_user_id)
+                   )
+    messages = cursor.fetchall()
+
+    # Ungelesene Nachrichten als gelesen markieren
+    cursor.execute("""
+                    update messages
+                   set read_at = CURRENT_TIMESTAMP
+                   where ad_id = %s
+                    and to_user_id = %s
+                    and read_at is null
+                   """,
+                   (ad_id, current_user_id)
+                   )
+    conn.commit()
+    conn.close()
+
+    return render_template(
+        'messages_thread.html',
+        ad=ad,
+        other_user=other_user,
+        messages=messages,
+        current_user_id=current_user_id
+    )
+
+    # Das sollte eigentlich (hoffe ich, glaube ich, i don't know for sure) alles an Chat für 1 Anzeige, zwischen 2 Usern abdecken
+
+    
+# ---------------------------
+#   Inbox-Route 
+# ---------------------------
+@app.route('/messages')
+@login_required
+def messages_inbox():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    user_id = session.get('user_id')
+
+    cursor.execute("""
+                    select m.ad_id,
+                   a.titel as ad_titel,
+
+                   case
+                    when m.from_user_id = %s then m.to_user_id
+                    else m.from_user_id
+                   end as other_user_id,
+
+                   u.vorname as other_vorname,
+                   u.nachname as other_nachname,
+
+                   max(m.sent_at) as last_sent_at,
+
+                   sum(
+                    case
+                        when m.to_user_id = %s
+                        and m.read_at is null then 1
+                        else 0
+                    end
+                   ) as unread_count
+
+                   from messages m
+                   join ads a on a.ad_id = m.ad_id
+                   join users u on u.user_id = (
+                    case
+                        when m.from_user_id = %s then m.to_user_id
+                        else m.from_user_id 
+                    end
+                   )
+
+                   where m.from_user_id = %s or m.to_user_id = %s
+                   group by m.ad_id, other_user_id
+                   order by last_sent_at desc
+                    """,
+                    (user_id, user_id, user_id, user_id, user_id)
+                    )
+    conversations = cursor.fetchall()
+
+    return render_template('messages_inbox.html', conversations=conversations)
