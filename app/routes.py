@@ -1366,6 +1366,8 @@ def message_thread(ad_id, other_user_id):
         current_user_id=current_user_id
     )
 
+    # return jsonify(messages)
+
     # Das sollte eigentlich (hoffe ich, glaube ich, i don't know for sure) alles an Chat für 1 Anzeige, zwischen 2 Usern abdecken
 
     

@@ -1,89 +1,59 @@
 <!doctype html>
 <html lang="de">
   <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="icon" href="{{ url_for('static', filename='icons/favicon.ico') }}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='icons/favicon-32x32.png') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='icons/favicon-16x16.png') }}">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+    <link
+      rel="icon"
+      href="{{ url_for('static', filename='icons/favicon.ico') }}"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="{{ url_for('static', filename='icons/favicon-32x32.png') }}"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="{{ url_for('static', filename='icons/favicon-16x16.png') }}"
+    />
 
     <title>{% block title %}bfw Kleinanzeigen{% endblock %}</title>
   </head>
 
   <body>
-
-    <header class="site-header">
-      <nav class="nav">
-        <div class="brand">
-          <a href="{{ url_for('index') }}" class="brand-link">
-            <img src="{{ url_for('static', filename='icons/favicon-32x32.png') }}" alt="Logo" class="brand-logo">
-            <span class="brand-name">bfw Kleinanzeigen</span>
-          </a>
-
-          {% if 'user_id' in session %}
-            <span class="slogan">
-              Willkommen zurück, 
-              {{ session.vorname }} {{ session.nachname }}!
-            </span>
-          {% else %}
-            <span class="slogan">Finde oder veröffentliche lokale Kleinanzeigen.</span>
-          {% endif %}
-        </div>
-
-        <ul class="nav-links">
-          {% if 'user_id' in session %}
-            <li><a href="{{ url_for('index') }}">Startseite</a></li>
-            <li><a href="{{ url_for('ad_new') }}">Neue Anzeige</a></li>
-            <li><a href="{{ url_for('my_ads') }}">Meine Anzeigen</a></li>
-
-            {# Nachrichten-Inbox mit unread-messages Counter über context processor #}
-            <li>
-              <a href="{{ url_for('messages_inbox') }}">
-                Nachrichten
-                {% if unread_messages_count and unread_messages_count > 0 %}
-                ({{ unread_messages_count }})
-                {% endif %}
-              </a>
-            </li>
-
-            {# Admin-Dashboard mit Pending-Ads Counter #}
-            {% if session.get('rolle') in ['admin', 'redakteur'] %}
-              <li>
-                <a href="{{ url_for('admin_dashboard') }}">
-                  Admin-Dashboard
-                  {% if pending_ads_count and pending_ads_count > 0 %}
-                    ({{ pending_ads_count }})
-                  {% endif %}
-                </a>
-              </li>
-            {% endif %}
-
-
-            <li><a href="{{ url_for('logout') }}">Abmelden</a></li>
-          {% else %}
-            <li><a href="{{ url_for('login') }}">Login</a></li>
-            <li><a href="{{ url_for('register') }}">Registrieren</a></li>
-          {% endif %}
-        </ul>
-      </nav>
-    </header>
-
-    {# für die Flash-Messages #}
+    {% include "header.html" %}
+    <!-- -->
     {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <ul class="flash-messages">
-          {% for message in messages %}
-            <li class="flash-message">{{ message }}</li>
-          {% endfor %}
-        </ul>
-      {% endif %}
-    {% endwith %}
-
-    {# Extended Hauptinhalt kommts hier #}
-
-    {% block content %}
-    {% endblock %}
-
+    <!-- -->
+    {% if messages %}
+    <ul class="flash-messages">
+      {% for message in messages %}
+      <li class="flash-message">{{ message }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %} {% endwith %}
+    <main>
+      <div class="layout-with-sidebar">
+        <aside class="sidebar">
+          {% include "partials/_user_sidebar.html" %}
+          <!-- -->
+          {% include "partials/_categories_sidebar.html" %}
+          <!-- -->
+        </aside>
+        {% block content %} {% endblock %}
+      </div>
+    </main>
+    {% include "footer.html" %}
   </body>
+  <script
+    type="module"
+    src="{{ url_for('static', filename='js/main.js')}}"
+  ></script>
 </html>

@@ -1,22 +1,32 @@
-{% extends "base.html" %}
+{% extends "base.html" %} {% block title %}Login{% endblock %} {% block content
+%}
 
-{% block title %}Login{% endblock %}
-
-{% block content %}
-<h1>Login</h1>
-
-<form action="{{ url_for('login') }}" method="post">
+<div class="form-container">
+  <div class="form-aside">
+    <h2>Login</h2>
+    <p>
+      I should be incapable of drawing a single stroke at the present moment;
+      and yet I feel that I never was a greater artist than now.
+    </p>
+  </div>
+  <form class="form login" action="{{ url_for('login') }}" method="post">
     <div>
-        <label for="email">E-Mail</label>
-        <input type="email" id="email" name="email" required>
+      <input class="form-input" type="email" id="email" name="email" required />
+      <label class="form-label" for="email">E-Mail</label>
     </div>
 
     <div>
-        <label for="password">Passwort</label>
-        <input type="password" id="password" name="password" required>
+      <input
+        class="form-input"
+        type="password"
+        id="password"
+        name="password"
+        required
+      />
+      <label class="form-label" for="password">Passwort</label>
     </div>
 
     <button type="submit">Einloggen</button>
-</form>
-
+  </form>
+</div>
 {% endblock %}

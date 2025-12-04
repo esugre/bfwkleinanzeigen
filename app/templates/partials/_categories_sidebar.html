@@ -1,16 +1,17 @@
-
-<aside class="sidebar">
+<div>
   <h3>Kategorien</h3>
   <ul>
     <li class="{% if not active_category %}active{% endif %}">
       <a href="{{ url_for('index') }}">Alle Anzeigen</a>
     </li>
     {% for cat in categories %}
-      <li class="{% if active_category and active_category.category_id == cat.category_id %}active{% endif %}">
-        <a href="{{ url_for('ads_by_category', category_id=cat.category_id) }}">
-          {{ cat.name }}
-        </a>
-      </li>
+    <li
+      class="{% if active_category and active_category.category_id == cat.category_id %}active{% endif %}"
+    >
+      <a href="{{ url_for('ads_by_category', category_id=cat.category_id) }}">
+        {{ cat.name }}
+      </a>
+    </li>
     {% endfor %}
   </ul>
-</aside>
+</div>

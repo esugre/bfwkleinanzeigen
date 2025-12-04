@@ -1,32 +1,70 @@
-{% extends "base.html" %}
-
-{% block title %}Registrierung{% endblock %}
-
-{% block content %}
-<h1>Registrieren</h1>
-
-<form action="{{ url_for('register') }}" method="post">
+{% extends "base.html" %} {% block title %}Registrierung{% endblock %} {% block
+content %}
+<div class="form-container">
+  <div class="form-aside">
+    <h2>Registrieren</h2>
+    <p>
+      A wonderful serenity has taken possession of my entire soul, like these
+      sweet mornings of spring which I enjoy with my whole heart. I am alone,
+      and feel the charm of existence in this spot, which was created for the
+      bliss of souls like mine. I am so happy, my dear friend, so absorbed in
+      the exquisite sense of mere tranquil existence, that I neglect my talents.
+    </p>
+  </div>
+  <form
+    class="form register"
+    id="register-form"
+    action="{{ url_for('register') }}"
+    method="post"
+  >
     <div>
-        <label for="vorname">Vorname</label>
-        <input type="text" id="vorname" name="vorname" required>
+      <input
+        class="form-input"
+        type="text"
+        id="vorname"
+        name="vorname"
+        placeholder="vorname"
+        required
+      />
+      <label class="form-label" for="vorname">Vorname</label>
     </div>
 
     <div>
-        <label for="nachname">Nachname</label>
-        <input type="text" id="nachname" name="nachname" required>
+      <input
+        class="form-input"
+        type="text"
+        id="nachname"
+        name="nachname"
+        placeholder="nachname"
+        required
+      />
+      <label class="form-label" for="nachname">Nachname</label>
     </div>
 
     <div>
-        <label for="email">E-Mail</label>
-        <input type="email" id="email" name="email" required>
+      <input
+        class="form-input"
+        type="email"
+        id="email"
+        name="email"
+        placeholder="E-Mail"
+        required
+      />
+      <label class="form-label" for="email">E-Mail</label>
     </div>
 
     <div>
-        <label for="password">Passwort</label>
-        <input type="password" id="password" name="password" required>
+      <input
+        class="form-input"
+        type="password"
+        id="password"
+        name="password"
+        placeholder="Passwort"
+        required
+      />
+      <label class="form-label" for="password">Passwort</label>
     </div>
-
-    <button type="submit">Konto erstellen</button>
-</form>
-
-{% endblock %}
+    <button type="submit" form="register-form">Konto erstellen</button>
+  </form>
+  <div>{% endblock %}</div>
+</div>

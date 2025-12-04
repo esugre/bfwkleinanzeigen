@@ -1,4 +1,3 @@
-
 /* LEGACY CODE von Adoptify (Haustierverleih) -- Neues CSS weiter unten */
 
 
@@ -496,4 +495,354 @@ display: block;                           /* Entfernt diesen weißen Rand unter 
   font-size: 0.8rem;
   color: #777;
 }
+
+
+
+html,
+body {
+  /* Selbe Regeln für html als auch body */
+  height: 100%; /* Damit der Body so hoch ist wie das gesamte Fenster vom Browser */
+  margin: 0; /* Entfernt den Standard-Abstand nach Außen, wickeln den Browser um den Body quasi */
+  background: var(--bg);
+  color: var(--fg);
+  font:
+    16px/1.5 system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    sans-serif; /*Schriftgröße 16px, Zeilenhöhe 1.5, Schriftarten als Fallback*/
+}
+
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  text-decoration: none;
+}
+
+header,
+main,
+footer {
+  padding: 0 calc((100vw - 1240px) / 2);
+}
+
+header {
+  position: sticky;
+  top: 0;
+}
+
+main {
+  min-height: 90vh;
+  padding-top: 1.8rem;
+}
+
+footer {
+  min-height: 10vh;
+}
+
+.form-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 3rem;
+  padding: 3rem 2rem 1.5rem;
+  background: lightgrey;
+  /*   max-height: 600px; */
+}
+
+.form-aside {
+  margin-bottom: 0;
+  margin-right: 2rem;
+  text-align: left;
+  align-self: center;
+}
+
+.form-aside h2 {
+  font-size: 1.7rem;
+  width: 100%;
+  max-width: 25ch;
+  /*   margin: 0 auto; */
+  text-align: left;
+  margin-bottom: 2rem;
+}
+
+.form-aside p {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  width: 100%;
+  max-width: 45ch;
+}
+
+.form {
+  max-width: 60ch;
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+.form input {
+  width: clamp(120px, 50vw, 420px);
+  height: 2.5rem;
+  padding: 0 1.25rem;
+  border: 1px solid black;
+  border-radius: 2px;
+  margin: 0.625rem auto;
+  transition: all 250ms;
+}
+
+.form .form-input:focus {
+  outline: none;
+  border-top-color: rgba(0, 0, 0, 0.1);
+}
+
+.form .form-input:focus + .form-label,
+.form .form-input:not(:placeholder-shown) + .form-label {
+  transform: translateY(-4.5rem) scale(1);
+  color: black;
+}
+
+.form .form-input::placeholder {
+  display: none;
+  color: transparent;
+
+  -webkit-user-select: none; /* Safari */
+  -ms-user-select: none; /* IE 10 and IE 11 */
+  user-select: none; /* Standard syntax */
+}
+
+.form .form-input:not(:placeholder-shown) {
+  border-top-color: rgba(0, 0, 0, 0.5);
+}
+
+.form-label {
+  font-size: 1rem;
+  color: grey;
+  display: block;
+
+  /* Moves the label on TOP of the placeholder */
+  /* You'll need to change this as needed */
+  transform: translate(1.25rem, -2.5rem);
+  transform-origin: 0 0; /* Used later for transitions */
+  transition: all 500ms;
+
+  -webkit-user-select: none; /* Safari */
+  -ms-user-select: none; /* IE 10 and IE 11 */
+  user-select: none; /* Standard syntax */
+  /* This line prevents the label from being selected.*/
+  pointer-events: none;
+}
+
+button[type="submit"] {
+  border: 1px solid black;
+  font-size: 1rem;
+  padding: 0.5em 1em;
+  border-radius: 3px;
+  font-style: normal;
+  font-weight: 400;
+  align-self: flex-start;
+}
+
+/* login form sidebar */
+
+.form.sm input {
+  width: clamp(10ch, 50vw, 26ch);
+  height: 2rem;
+  padding: 0 0.75rem;
+  border: 1px solid black;
+  border-radius: 2px;
+  margin: 0.625rem auto;
+  transition: all 250ms;
+}
+
+.form .form-input:focus {
+  outline: none;
+  border-top-color: rgba(0, 0, 0, 0.1);
+}
+
+.form .form-input:focus + .form-label,
+.form .form-input:not(:placeholder-shown) + .form-label {
+  transform: translateY(-4.5rem) scale(1);
+  color: black;
+}
+
+.form .form-input::placeholder {
+  display: none;
+  color: transparent;
+
+  -webkit-user-select: none; /* Safari */
+  -ms-user-select: none; /* IE 10 and IE 11 */
+  user-select: none; /* Standard syntax */
+}
+
+.form .form-input:not(:placeholder-shown) {
+  border-top-color: rgba(0, 0, 0, 0.5);
+}
+
+.form-label.sm {
+  font-size: 1rem;
+  color: grey;
+  display: block;
+
+  /* Moves the label on TOP of the placeholder */
+  /* You'll need to change this as needed */
+  transform: translate(1.25rem, -2.5rem);
+  transform-origin: 0 0; /* Used later for transitions */
+  transition: all 500ms;
+
+  -webkit-user-select: none; /* Safari */
+  -ms-user-select: none; /* IE 10 and IE 11 */
+  user-select: none; /* Standard syntax */
+  /* This line prevents the label from being selected.*/
+  pointer-events: none;
+}
+
+button[type="submit"] {
+  border: 1px solid black;
+  font-size: 1rem;
+  padding: 0.5em 1em;
+  border-radius: 3px;
+  font-style: normal;
+  font-weight: 400;
+  align-self: flex-start;
+}
+
+/* asdasd */
+
+
+
+
+
+
+
+
+
+.form-input:[type="text"]:valid + label::after,
+.form-input:[type="email"]:valid + label::after,
+.form-input:[type="password"]:valid + label::after {
+  content: "✔";
+  margin-left: 0.3rem;
+  color: green;
+}
+
+.form-input:[type="text"]:valid,
+.form-input:[type="email"]:valid,
+.form-input:[type="password"]:valid {
+  border: 0px solid green;
+  border-top: 2px solid green !important;
+}
+
+.ad-list {
+  display: grid; /* Flexbox, damit die Karten nebeneinander angeordnet werden*/
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  border: 1px solid #e3e3e3; /* Leichter Rahmen um die Liste der Karten*/
+  gap: 1rem;
+}
+
+.ad-card {
+  position: relative;
+  display: grid;
+  grid-template-rows: 200px 120px;
+  grid-template-columns: 1fr;
+/*   gap: .5rem; */
+  border: 1px solid #e3e3e3; /*Leichter Rahmen um die Karte*/
+}
+
+.card-img {
+  grid-row: 1;
+  overflow: hidden;
+}
+
+.card-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-
+}
+
+.card-body {
+  overflow: hidden;
+  padding: .5rem;
+}
+
+
+.ad-card .ad-title {
+  margin: 0;
+  margin-bottom: .5rem;
+  font-size: 1.2rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-align: center;
+/*   font-weight: 800; */
+}
+
+.ad-card .ad-price {
+  margin: 0;
+  font-weight: 600;
+  position: absolute;
+  background: rgba(0, 200, 0, 1);
+  padding: .1rem .5rem;
+  right: 0;
+  top: 57%;
+  transform: rotate(4deg) translateX(4px);
+}
+
+.ad-price::before
+/* .ad-price::after  */
+{
+  content: '';
+  position: absolute !important;
+  z-index: -1;
+  left: -12px;
+  top: 0px;
+  display: block;
+  width: calc(100% + 12px);
+  height: 100%;
+  border: 13px solid rgba(0, 200, 0, 1);
+  border-right: 13px solid rgba(0, 200, 0, 1);
+  border-bottom-color: rgba(0, 200, 0, 1);;
+  border-left-color: transparent;
+/*   transform: rotate(-7deg); */
+}
+
+
+
+.ad-card .ad-desc {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.ad-card .ad-meta {
+  display: none;
+}
+
+
+.ad-card:hover {
+  transform: scale(1.03);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
